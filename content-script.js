@@ -120,6 +120,18 @@
       td.dataset.reviewerBound = '1';
       td.addEventListener('click', handleLineNumberClick);
       td.addEventListener('mouseenter', () => { lastHoveredTd = td; });
+
+      // Bind the whole row so hovering anywhere on it updates lastHoveredTd
+      const tr = td.closest('tr');
+      if (tr && !tr.dataset.reviewerRowBound) {
+        tr.dataset.reviewerRowBound = '1';
+        tr.addEventListener('mouseenter', () => {
+          const preferredTd =
+            tr.querySelector('td.new-diff-line-number[data-diff-side="right"][data-line-number]') ||
+            tr.querySelector('td.new-diff-line-number[data-line-number]');
+          if (preferredTd) lastHoveredTd = preferredTd;
+        });
+      }
     }
   }
 
