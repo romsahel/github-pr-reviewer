@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GitHub PR Line Reviewer — Options</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 24px 32px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      color: #1f2328;
+      background: #ffffff;
+      max-width: 680px;
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      margin: 0 0 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h2 {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #57606a;
+      border-bottom: 1px solid #d0d7de;
+      padding-bottom: 6px;
+      margin: 28px 0 12px;
+    }
+
+    .subtitle {
+      color: #57606a;
+      margin-bottom: 24px;
+    }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-card {
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      padding: 14px 16px;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #0969da;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      color: #57606a;
+      font-size: 0.8rem;
+    }
+
+    /* PR list */
+    #pr-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 16px;
+    }
+
+    #pr-list li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #f6f8fa;
+    }
+
+    #pr-list li:last-child {
+      border-bottom: none;
+    }
+
+    .pr-key {
+      font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace;
+      font-size: 0.8rem;
+      color: #24292f;
+    }
+
+    .pr-meta {
+      color: #57606a;
+      font-size: 0.8rem;
+    }
+
+    #pr-list-empty {
+      color: #57606a;
+      font-style: italic;
+    }
+
+    /* Buttons */
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    button {
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid;
+      transition: background 0.15s;
+    }
+
+    .btn-primary {
+      background: #0969da;
+      border-color: #0969da;
+      color: #ffffff;
+    }
+    .btn-primary:hover { background: #0860ca; }
+
+    .btn-secondary {
+      background: #f6f8fa;
+      border-color: #d0d7de;
+      color: #24292f;
+    }
+    .btn-secondary:hover { background: #eaeef2; }
+
+    .btn-danger {
+      background: #f6f8fa;
+      border-color: #d0d7de;
+      color: #cf222e;
+    }
+    .btn-danger:hover { background: #ffebe9; border-color: #cf222e; }
+
+    /* Status message */
+    #status-msg {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      color: #1a7f37;
+      min-height: 1.2em;
+    }
+
+    /* Keyboard shortcuts table */
+    table.shortcuts {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    table.shortcuts th,
+    table.shortcuts td {
+      text-align: left;
+      padding: 6px 10px;
+      border-bottom: 1px solid #f0f3f6;
+    }
+
+    table.shortcuts th {
+      font-weight: 600;
+      color: #57606a;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    kbd {
+      display: inline-block;
+      padding: 1px 6px;
+      font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace;
+      font-size: 0.8rem;
+      border: 1px solid #d0d7de;
+      border-radius: 4px;
+      background: #f6f8fa;
+      color: #1f2328;
+      box-shadow: inset 0 -1px 0 #d0d7de;
+    }
+
+    .shortcut-note {
+      color: #57606a;
+      font-size: 0.8rem;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>
+    <img src="icons/icon-48.png" width="24" height="24" alt="" style="border-radius:4px">
+    GitHub PR Line Reviewer
+  </h1>
+  <p class="subtitle">Manage your review progress across pull requests.</p>
+
+  <h2>Storage Stats</h2>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-number" id="stat-prs">—</div>
+      <div class="stat-label">PRs tracked</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="stat-files">—</div>
+      <div class="stat-label">Files reviewed</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="stat-lines">—</div>
+      <div class="stat-label">Lines reviewed</div>
+    </div>
+  </div>
+
+  <h2>Tracked PRs</h2>
+  <ul id="pr-list">
+    <li id="pr-list-empty">Loading…</li>
+  </ul>
+
+  <div class="btn-row">
+    <button class="btn-primary" id="btn-export">Export JSON</button>
+    <button class="btn-danger" id="btn-clear">Clear All Data</button>
+  </div>
+  <div id="status-msg"></div>
+
+  <h2>Keyboard Shortcuts</h2>
+  <table class="shortcuts">
+    <thead>
+      <tr>
+        <th>Key</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><kbd>r</kbd></td>
+        <td>Toggle last-hovered line as reviewed</td>
+      </tr>
+      <tr>
+        <td><kbd>Shift</kbd> + <kbd>N</kbd></td>
+        <td>Jump to next unreviewed line</td>
+      </tr>
+      <tr>
+        <td><kbd>Shift</kbd> + <kbd>P</kbd></td>
+        <td>Jump to previous unreviewed line</td>
+      </tr>
+      <tr>
+        <td><kbd>Alt</kbd> + <kbd>R</kbd></td>
+        <td>Toggle reviewed (browser command)</td>
+      </tr>
+      <tr>
+        <td><kbd>Shift</kbd> + <kbd>Alt</kbd> + <kbd>N</kbd></td>
+        <td>Next unreviewed (browser command)</td>
+      </tr>
+      <tr>
+        <td><kbd>Shift</kbd> + <kbd>Alt</kbd> + <kbd>P</kbd></td>
+        <td>Previous unreviewed (browser command)</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="shortcut-note">
+    Browser commands can be customized at <strong>about:addons</strong> → Manage Extension Shortcuts.
+    In-page shortcuts (<kbd>r</kbd>, <kbd>Shift+N</kbd>, <kbd>Shift+P</kbd>) work automatically
+    on any GitHub PR files page.
+  </p>
+
+  <script src="options.js"></script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+{
+  "manifest_version": 2,
+  "name": "GitHub PR Line Reviewer",
+  "version": "1.0.0",
+  "description": "Mark GitHub PR diff lines as reviewed with persistent state and keyboard navigation.",
+
+  "permissions": ["storage", "tabs"],
+
+  "content_scripts": [
+    {
+      "matches": ["https://github.com/*/*/pull/*/changes*"],
+      "js": ["content-script.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+
+  "commands": {
+    "toggle-reviewed": {
+      "suggested_key": {
+        "default": "Alt+R"
+      },
+      "description": "Toggle current line as reviewed"
+    },
+    "next-unreviewed": {
+      "suggested_key": {
+        "default": "Shift+Alt+N"
+      },
+      "description": "Navigate to next unreviewed line"
+    },
+    "prev-unreviewed": {
+      "suggested_key": {
+        "default": "Shift+Alt+P"
+      },
+      "description": "Navigate to previous unreviewed line"
+    }
+  },
+
+  "options_page": "options.html",
+
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "96": "icons/icon-96.png"
+  },
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "gh-pr-line-reviewer@example.com",
+      "strict_min_version": "109.0"
+    }
+  }
+}

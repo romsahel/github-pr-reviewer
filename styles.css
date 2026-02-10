@@ -1,0 +1,93 @@
+/* ── Reviewed row ────────────────────────────────────────────────────────── */
+/* Light blue (#ddf4ff) avoids confusion with GitHub's green addition rows */
+tr.pr-line-reviewed td {
+  background-color: #ddf4ff !important;
+}
+
+tr.pr-line-reviewed td.new-diff-line-number::after {
+  color: #0969da;
+  font-size: 0.75em;
+  font-weight: bold;
+}
+
+/* ── Clickable line number cells ─────────────────────────────────────────── */
+td.new-diff-line-number[data-line-number] {
+  cursor: pointer;
+  user-select: none;
+}
+
+td.new-diff-line-number[data-line-number]:hover {
+  background-color: #b6e3ff !important;
+}
+
+/* ── Flash animation (keyboard nav) ─────────────────────────────────────── */
+@keyframes pr-line-flash {
+  0%   { background-color: #fff8c5; }
+  100% { background-color: transparent; }
+}
+
+tr.pr-line-flash td {
+  animation: pr-line-flash 1.2s ease-out forwards;
+}
+
+/* ── File progress badge ─────────────────────────────────────────────────── */
+.pr-reviewer-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 2em;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: 8px;
+  vertical-align: middle;
+  border: 1px solid currentColor;
+  opacity: 0.85;
+  transition: opacity 0.2s;
+}
+
+.pr-reviewer-progress:hover {
+  opacity: 1;
+}
+
+.pr-reviewer-progress.complete {
+  color: #1a7f37;
+  background: #dafbe1;
+  border-color: #82cfaa;
+}
+
+.pr-reviewer-progress.partial {
+  color: #856404;
+  background: #fff3cd;
+  border-color: #e3b341;
+}
+
+.pr-reviewer-progress.empty {
+  color: #57606a;
+  background: #f6f8fa;
+  border-color: #d0d7de;
+}
+
+/* ── Toast notification ──────────────────────────────────────────────────── */
+#pr-reviewer-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 100000;
+  padding: 10px 16px;
+  border-radius: 6px;
+  background: #1f2328;
+  color: #f6f8fa;
+  font-size: 0.875rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+#pr-reviewer-toast.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
