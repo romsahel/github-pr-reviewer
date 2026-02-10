@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "GitHub PR Line Reviewer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Mark GitHub PR diff lines as reviewed with persistent state and keyboard navigation.",
 
   "permissions": ["storage", "tabs"],

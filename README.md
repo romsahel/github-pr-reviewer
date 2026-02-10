@@ -18,14 +18,25 @@ A Firefox extension that lets you mark individual diff lines as reviewed while g
 
 Requires [Firefox Developer Edition](https://www.mozilla.org/firefox/developer/) or [Firefox Nightly](https://www.mozilla.org/firefox/nightly/) for permanent installation without Mozilla signing.
 
-**Dependencies:** none. Plain JavaScript, no build step.
+**Dependencies:** [Node.js](https://nodejs.org) (for the build step). Runtime has no dependencies.
 
-### Build the `.xpi`
+### Build
 
 ```bash
 cd github-pr-reviewer
-zip -r ../gh-pr-reviewer.xpi . --exclude "*.DS_Store"
+npm install        # install esbuild (one-time)
+npm run build      # bundle src/ → content-script.js
 ```
+
+During development, use `npm run watch` to rebuild automatically on every save.
+
+### Package the `.xpi`
+
+```bash
+npm run package
+```
+
+This builds first, then zips everything (excluding `node_modules/`, `src/`, and other non-extension files) into `gh-pr-reviewer.xpi`.
 
 ## Installation
 

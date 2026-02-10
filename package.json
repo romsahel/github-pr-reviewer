@@ -1,0 +1,13 @@
+{
+  "name": "github-pr-line-reviewer",
+  "version": "1.0.1",
+  "private": true,
+  "scripts": {
+    "build": "esbuild src/main.js --bundle --outfile=content-script.js --format=iife --banner:js='/* Generated — edit src/ not this file */'",
+    "watch": "esbuild src/main.js --bundle --outfile=content-script.js --format=iife --watch",
+    "package": "npm run build && zip -r gh-pr-reviewer.xpi \"styles.css\" \"background.js\" \"options.js\" \"options.html\" \"icons/*\" \"manifest.json\" \"content-script.js\""
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}
