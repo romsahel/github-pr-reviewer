@@ -90,6 +90,16 @@ function markAllInFileUntilHere() {
   }
 }
 
+function toggleFileViewed() {
+  if (!state.lastHoveredTd) return;
+  const table = state.lastHoveredTd.closest('table[data-diff-anchor]');
+  if (!table) return;
+  const region = table.closest('div[role="region"]');
+  if (!region) return;
+  const btn = region.querySelector('button[aria-label="Not Viewed"], button[aria-label="Viewed"]');
+  if (btn) btn.click();
+}
+
 function navigateToUnreviewed(direction) {
   // Collect diff rows that are not reviewed and not hunk headers
   const rows = Array.from(
@@ -167,6 +177,9 @@ export function onMessage(message) {
         break;
       case 'prev-unreviewed':
         navigateToUnreviewed('prev');
+        break;
+      case 'toggle-file-viewed':
+        toggleFileViewed();
         break;
     }
   }

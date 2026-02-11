@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "GitHub PR Line Reviewer",
-  "version": "1.0.1",
+  "version": "1.0.6",
   "description": "Mark GitHub PR diff lines as reviewed with persistent state and keyboard navigation.",
 
   "permissions": ["storage", "tabs"],
@@ -38,6 +38,12 @@
         "default": "Shift+Alt+P"
       },
       "description": "Navigate to previous unreviewed line"
+    },
+    "toggle-file-viewed": {
+      "suggested_key": {
+        "default": "Alt+M"
+      },
+      "description": "Toggle current file as viewed"
     }
   },
 
