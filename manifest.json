@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "GitHub PR Line Reviewer",
-  "version": "1.0.7",
+  "version": "1.1.01",
   "description": "Mark GitHub PR diff lines as reviewed with persistent state and keyboard navigation.",
   "permissions": [
     "storage",
@@ -10,7 +10,9 @@
   "content_scripts": [
     {
       "matches": [
-        "https://github.com/*/*/pull/*/changes*"
+        "https://github.com/*/*/pull/*",
+        "https://github.com/*/*/pull/*/changes*",
+        "https://github.com/pulls*"
       ],
       "js": [
         "content-script.js"

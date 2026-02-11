@@ -57,19 +57,12 @@ export async function onURLChange() {
 }
 
 export function startURLObserver() {
-  // GitHub uses Turbo/Hotwire — listen for turbo:load
-  document.addEventListener('turbo:load', onURLChange);
-
-  // Fallback: observe title changes
-  if (state.urlObserver) state.urlObserver.disconnect();
-  const titleEl = document.querySelector('title');
-  if (titleEl) {
-    state.urlObserver = new MutationObserver(() => {
-      if (location.href !== state.lastURL) onURLChange();
+  // Primary: Navigation API (modern browsers, including Firefox 124+)
+  if (window.navigation) {
+    window.navigation.addEventListener('navigate', () => {
+      onURLChange();
     });
-    state.urlObserver.observe(titleEl, { childList: true });
+  } else {
+    console.warn('[PR Reviewer] Navigation API not available, using fallbacks');
   }
-
-  // Fallback: popstate (back/forward navigation)
-  window.addEventListener('popstate', onURLChange);
 }
