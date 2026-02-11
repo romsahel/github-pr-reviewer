@@ -4,56 +4,6 @@ export function parsePRFromURL(url) {
   return { owner: m[1], repo: m[2], prNumber: m[3] };
 }
 
-/**
- * Wait for diff content to be present in the DOM
- * GitHub loads diffs progressively, so we need to wait for them to appear
- */
-export function waitForDiffContent() {
-  return new Promise((resolve) => {
-    // Check if diff content already exists
-    const checkForDiff = () => {
-      const diffTables = document.querySelectorAll('table[data-diff-anchor]');
-      const lineNumbers = document.querySelectorAll('td.new-diff-line-number[data-line-number]');
-
-      if (diffTables.length > 0 && lineNumbers.length > 0) {
-        return true;
-      }
-      return false;
-    };
-
-    if (checkForDiff()) {
-      console.log('[PR Reviewer] Diff content already present');
-      resolve();
-      return;
-    }
-
-    console.log('[PR Reviewer] Diff content not ready, waiting...');
-
-    // Set up observer to wait for diff content
-    const observer = new MutationObserver(() => {
-      if (checkForDiff()) {
-        observer.disconnect();
-        resolve();
-      }
-    });
-
-    // Observe the most likely containers
-    const container = document.querySelector('[data-testid="progressive-diffs-list"]')
-      || document.querySelector('.js-diff-progressive-container')
-      || document.querySelector('#files')
-      || document.body;
-
-    observer.observe(container, { childList: true, subtree: true });
-
-    // Fallback timeout: initialize anyway after 5 seconds
-    setTimeout(() => {
-      console.log('[PR Reviewer] Timeout reached, initializing anyway');
-      observer.disconnect();
-      resolve();
-    }, 5000);
-  });
-}
-
 export function getFilePathForRow(tr) {
   const table = tr.closest('table[data-diff-anchor]');
   if (!table) return null;
