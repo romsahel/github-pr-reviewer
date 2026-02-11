@@ -7,7 +7,7 @@ A Firefox extension that lets you mark individual diff lines as reviewed while g
 - **Click any line number** to mark it as reviewed (light blue highlight + ✓)
 - **Click again** to unmark
 - **Keyboard shortcuts** (work anywhere on the diff row, no need to hover the line number):
-  - `r` — mark the current line as reviewed
+  - `r` — mark the hovered line as reviewed
   - `Shift+R` — mark all lines up to and including the current line (in the current file)
   - `Shift+N` / `Shift+P` — jump to next / previous unreviewed line
 - **Per-file progress badge** showing how many lines you've reviewed

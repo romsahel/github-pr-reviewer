@@ -50,13 +50,24 @@ function markAllInFileUntilHere() {
   if (!table) return;
 
   const allRows = Array.from(table.querySelectorAll('tr.diff-line-row'));
+  const anchorIdx = allRows.indexOf(anchorTr);
+  if (anchorIdx === -1) return;
+
+  // Start from just after the closest already-reviewed row above the anchor.
+  // If no reviewed row exists above, start from the top of the file.
+  let startIdx = 0;
+  for (let i = anchorIdx - 1; i >= 0; i--) {
+    if (allRows[i].classList.contains('pr-line-reviewed')) {
+      startIdx = i + 1;
+      break;
+    }
+  }
+
   let changed = false;
 
-  for (const tr of allRows) {
-    if (tr.querySelector('td.diff-hunk-cell')) {
-      if (tr === anchorTr) break;
-      continue;
-    }
+  for (let i = startIdx; i <= anchorIdx; i++) {
+    const tr = allRows[i];
+    if (tr.querySelector('td.diff-hunk-cell')) continue;
 
     const tds = tr.querySelectorAll('td.new-diff-line-number[data-line-number]');
     for (const td of tds) {
@@ -70,8 +81,6 @@ function markAllInFileUntilHere() {
       }
     }
     setLineVisualState(tr, true);
-
-    if (tr === anchorTr) break;
   }
 
   if (changed) {
