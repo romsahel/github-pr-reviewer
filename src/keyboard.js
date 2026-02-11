@@ -69,7 +69,8 @@ function markAllInFileUntilHere() {
     const tr = allRows[i];
     if (tr.querySelector('td.diff-hunk-cell')) continue;
 
-    const tds = tr.querySelectorAll('td.new-diff-line-number[data-line-number]');
+    const tds = tr.querySelectorAll('td.new-diff-line-number[data-line-number]:not(.diff-line-number-neutral)');
+    if (tds.length === 0) continue; // context-only row, skip
     for (const td of tds) {
       const content = getLineContent(td);
       if (content === null) continue;

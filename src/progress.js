@@ -6,7 +6,7 @@ export function updateFileProgress(filePath) {
   if (!table) return;
 
   // Count total unique (side, lineNumber) pairs visible in DOM, and reviewed ones by content
-  const cells = table.querySelectorAll('td.new-diff-line-number[data-line-number]');
+  const cells = table.querySelectorAll('td.new-diff-line-number[data-line-number]:not(.diff-line-number-neutral)');
   const sides = state.reviewState.get(filePath) || { L: new Set(), R: new Set() };
   const seen = new Set();
   let totalLines = 0, reviewedCount = 0;

@@ -35,7 +35,7 @@ function handleLineNumberClick(event) {
 
 export function bindLineNumberClicks(root) {
   root = root || document;
-  const cells = root.querySelectorAll('td.new-diff-line-number[data-line-number]');
+  const cells = root.querySelectorAll('td.new-diff-line-number[data-line-number]:not(.diff-line-number-neutral)');
   for (const td of cells) {
     if (td.dataset.reviewerBound === '1') continue;
     td.dataset.reviewerBound = '1';
