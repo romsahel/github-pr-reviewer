@@ -65,6 +65,8 @@ export function updateFileProgress(filePath) {
   badge.textContent = `${reviewedCount}/${totalLines}`;
   if (reviewedCount === totalLines) {
     badge.className = 'pr-reviewer-progress complete';
+    const viewedBtn = region && region.querySelector('button[aria-label="Not Viewed"]');
+    if (viewedBtn) viewedBtn.click();
   } else if (reviewedCount > 0) {
     badge.className = 'pr-reviewer-progress partial';
   } else {
