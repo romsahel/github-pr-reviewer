@@ -1,11 +1,12 @@
 {
   "name": "github-pr-line-reviewer",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "private": true,
   "scripts": {
     "build": "esbuild src/main.js --bundle --outfile=content-script.js --format=iife --banner:js='/* Generated — edit src/ not this file */'",
     "watch": "esbuild src/main.js --bundle --outfile=content-script.js --format=iife --watch",
-    "package": "npm run build && zip -r gh-pr-reviewer.xpi \"styles.css\" \"background.js\" \"options.js\" \"options.html\" \"icons/*\" \"manifest.json\" \"content-script.js\""
+    "version": "node -e \"const fs=require('fs');const m=JSON.parse(fs.readFileSync('manifest.json'));m.version=process.env.npm_package_version;fs.writeFileSync('manifest.json',JSON.stringify(m,null,2)+'\\n');\" && git add manifest.json",
+    "package": "npm run build && npm run version && zip -r gh-pr-reviewer.xpi \"styles.css\" \"background.js\" \"options.js\" \"options.html\" \"icons/*\" \"manifest.json\" \"content-script.js\""
   },
   "devDependencies": {
     "esbuild": "^0.25.0"
