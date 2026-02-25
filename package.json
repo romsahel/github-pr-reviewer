@@ -1,6 +1,6 @@
 {
   "name": "github-pr-line-reviewer",
-  "version": "1.1.12",
+  "version": "1.1.13",
   "private": true,
   "scripts": {
     "build": "esbuild src/main.js --bundle --outfile=content-script.js --format=iife --banner:js='/* Generated — edit src/ not this file */'",

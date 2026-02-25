@@ -1,11 +1,116 @@
+/* ══════════════════════════════════════════════════════════════════════════ */
+/* Theme tokens                                                                */
+/* Three cases handled:                                                        */
+/*   1. system dark + GitHub "auto"  → @media (prefers-color-scheme: dark)    */
+/*   2. GitHub explicitly dark       → html[data-color-mode="dark"]            */
+/*   3. system dark + GitHub light   → html[data-color-mode="light"] restores  */
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --pr-reviewed-bg:       #ddf4ff;
+  --pr-reviewed-hover:    #b6e3ff;
+  --pr-indicator-color:   #0969da;
+  --pr-flash-start:       #fff8c5;
+
+  --pr-badge-complete-fg: #1a7f37;
+  --pr-badge-complete-bg: #dafbe1;
+  --pr-badge-complete-bd: #82cfaa;
+
+  --pr-badge-partial-fg:  #856404;
+  --pr-badge-partial-bg:  #fff3cd;
+  --pr-badge-partial-bd:  #e3b341;
+
+  --pr-badge-empty-fg:    #57606a;
+  --pr-badge-empty-bg:    #f6f8fa;
+  --pr-badge-empty-bd:    #d0d7de;
+
+  --pr-toast-bg:          #1f2328;
+  --pr-toast-color:       #f6f8fa;
+  --pr-toast-shadow:      rgba(0, 0, 0, 0.3);
+}
+
+/* System dark preference — covers GitHub "auto" mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pr-reviewed-bg:       #1c3550;
+    --pr-reviewed-hover:    #1f3d5a;
+    --pr-indicator-color:   #58a6ff;
+    --pr-flash-start:       #3a3000;
+
+    --pr-badge-complete-fg: #56d364;
+    --pr-badge-complete-bg: #12261e;
+    --pr-badge-complete-bd: #2ea043;
+
+    --pr-badge-partial-fg:  #e3b341;
+    --pr-badge-partial-bg:  #2a1f00;
+    --pr-badge-partial-bd:  #9e6a03;
+
+    --pr-badge-empty-fg:    #8b949e;
+    --pr-badge-empty-bg:    #21262d;
+    --pr-badge-empty-bd:    #30363d;
+
+    --pr-toast-bg:          #30363d;
+    --pr-toast-color:       #e6edf3;
+    --pr-toast-shadow:      rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* GitHub explicitly set to dark */
+html[data-color-mode="dark"] {
+  --pr-reviewed-bg:       #1c3550;
+  --pr-reviewed-hover:    #1f3d5a;
+  --pr-indicator-color:   #58a6ff;
+  --pr-flash-start:       #3a3000;
+
+  --pr-badge-complete-fg: #56d364;
+  --pr-badge-complete-bg: #12261e;
+  --pr-badge-complete-bd: #2ea043;
+
+  --pr-badge-partial-fg:  #e3b341;
+  --pr-badge-partial-bg:  #2a1f00;
+  --pr-badge-partial-bd:  #9e6a03;
+
+  --pr-badge-empty-fg:    #8b949e;
+  --pr-badge-empty-bg:    #21262d;
+  --pr-badge-empty-bd:    #30363d;
+
+  --pr-toast-bg:          #30363d;
+  --pr-toast-color:       #e6edf3;
+  --pr-toast-shadow:      rgba(0, 0, 0, 0.6);
+}
+
+/* GitHub explicitly set to light — restores light tokens when system is dark */
+html[data-color-mode="light"] {
+  --pr-reviewed-bg:       #ddf4ff;
+  --pr-reviewed-hover:    #b6e3ff;
+  --pr-indicator-color:   #0969da;
+  --pr-flash-start:       #fff8c5;
+
+  --pr-badge-complete-fg: #1a7f37;
+  --pr-badge-complete-bg: #dafbe1;
+  --pr-badge-complete-bd: #82cfaa;
+
+  --pr-badge-partial-fg:  #856404;
+  --pr-badge-partial-bg:  #fff3cd;
+  --pr-badge-partial-bd:  #e3b341;
+
+  --pr-badge-empty-fg:    #57606a;
+  --pr-badge-empty-bg:    #f6f8fa;
+  --pr-badge-empty-bd:    #d0d7de;
+
+  --pr-toast-bg:          #1f2328;
+  --pr-toast-color:       #f6f8fa;
+  --pr-toast-shadow:      rgba(0, 0, 0, 0.3);
+}
+
 /* ── Reviewed row ────────────────────────────────────────────────────────── */
-/* Light blue (#ddf4ff) avoids confusion with GitHub's green addition rows */
+/* Soft blue avoids confusion with GitHub's green addition rows */
 tr.pr-line-reviewed td {
-  background-color: #ddf4ff !important;
+  background-color: var(--pr-reviewed-bg) !important;
 }
 
 tr.pr-line-reviewed td.new-diff-line-number::after {
-  color: #0969da;
+  color: var(--pr-indicator-color);
   font-size: 0.75em;
   font-weight: bold;
 }
@@ -17,12 +122,12 @@ td.new-diff-line-number[data-line-number] {
 }
 
 td.new-diff-line-number[data-line-number]:hover {
-  background-color: #b6e3ff !important;
+  background-color: var(--pr-reviewed-hover) !important;
 }
 
 /* ── Flash animation (keyboard nav) ─────────────────────────────────────── */
 @keyframes pr-line-flash {
-  0%   { background-color: #fff8c5; }
+  0%   { background-color: var(--pr-flash-start); }
   100% { background-color: transparent; }
 }
 
@@ -51,21 +156,21 @@ tr.pr-line-flash td {
 }
 
 .pr-reviewer-progress.complete {
-  color: #1a7f37;
-  background: #dafbe1;
-  border-color: #82cfaa;
+  color: var(--pr-badge-complete-fg);
+  background: var(--pr-badge-complete-bg);
+  border-color: var(--pr-badge-complete-bd);
 }
 
 .pr-reviewer-progress.partial {
-  color: #856404;
-  background: #fff3cd;
-  border-color: #e3b341;
+  color: var(--pr-badge-partial-fg);
+  background: var(--pr-badge-partial-bg);
+  border-color: var(--pr-badge-partial-bd);
 }
 
 .pr-reviewer-progress.empty {
-  color: #57606a;
-  background: #f6f8fa;
-  border-color: #d0d7de;
+  color: var(--pr-badge-empty-fg);
+  background: var(--pr-badge-empty-bg);
+  border-color: var(--pr-badge-empty-bd);
 }
 
 /* ── Toast notification ──────────────────────────────────────────────────── */
@@ -76,11 +181,11 @@ tr.pr-line-flash td {
   z-index: 100000;
   padding: 10px 16px;
   border-radius: 6px;
-  background: #1f2328;
-  color: #f6f8fa;
+  background: var(--pr-toast-bg);
+  color: var(--pr-toast-color);
   font-size: 0.875rem;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px var(--pr-toast-shadow);
   pointer-events: none;
   opacity: 0;
   transform: translateY(8px);

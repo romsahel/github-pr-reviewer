@@ -41,8 +41,9 @@ storageKey:  "pr:owner/repo:prNumber"
 ### DOM anchors GitHub PR diffs use
 
 - Line number cells: `td.new-diff-line-number[data-line-number][data-diff-side]`
-- Code cells: `td.blob-code[data-diff-side]`
-- Diff marker (inside code cell): `.blob-code-marker` span (+/-/space)
+- Code cells (new format): `td.diff-text-cell` containing `<code class="diff-text …"><span class="diff-text-marker">+/-/ </span><div class="diff-text-inner">…</div></code>`
+- Code cells (old format): `td.blob-code[data-diff-side]` with `.blob-code-marker` span
+- Blank lines: `.diff-text-inner` is an empty `<div>`; detected via `isEmptyLine()` in `src/dom.js`
 - Diff table: `table[data-diff-anchor][aria-label="Diff for: <path>"]`
 - File region: `div[role="region"]`
 
@@ -72,6 +73,7 @@ See an example in `github_diff.html`
   A full reset happens on page navigation.
 - **`navigateToUnreviewed` is DOM-based** — it queries `.diff-line-row:not(.pr-line-reviewed)`.
   No need to touch stored state when modifying navigation.
+- **Blank lines are ignored** — `isEmptyLine` / `isEmptyRow` (`src/dom.js`) detect lines whose `.diff-text-inner` is empty. Blank lines are excluded from state, progress counts, click handling, keyboard marking, and navigation. They receive `.pr-line-reviewed` visually (via `propagateReviewedAbove` in `src/visual.js`) only when the first non-blank line below them is marked.
 - **`github_diff.html`** can be opened locally in Firefox to test DOM interactions without a live GitHub page.
 - **Build step required** — edit files in `src/`, then run `npm run build` to regenerate `content-script.js`. Use `npm run watch` for auto-rebuild on save. Never edit `content-script.js` directly.
 - **To reload the extension** after changes: `about:debugging` → This Firefox → Reload the extension.
