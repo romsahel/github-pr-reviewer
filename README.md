@@ -18,15 +18,24 @@ A Firefox extension that lets you mark individual diff lines as reviewed while g
 
 Requires [Firefox Developer Edition](https://www.mozilla.org/firefox/developer/) or [Firefox Nightly](https://www.mozilla.org/firefox/nightly/) for permanent installation without Mozilla signing.
 
-**Dependencies:** [Node.js](https://nodejs.org) (for the build step). Runtime has no dependencies.
+### Build environment
 
-### Build
+- **OS:** macOS, Linux, or Windows (WSL recommended on Windows)
+- **Node.js:** v18 or later — download from [nodejs.org](https://nodejs.org) or install via [nvm](https://github.com/nvm-sh/nvm)
+- **npm:** bundled with Node.js (no separate install needed)
+- **Build tool:** [esbuild](https://esbuild.github.io) v0.25 — installed automatically via `npm install`
+
+### Build steps
 
 ```bash
-cd github-pr-reviewer
-npm install        # install esbuild (one-time)
-npm run build      # bundle src/ → content-script.js
+# 1. Install build dependencies (only needed once)
+npm install
+
+# 2. Bundle src/ → content-script.js
+npm run build
 ```
+
+The only generated file is `content-script.js`. All other extension files (`background.js`, `options.js`, `options.html`, `styles.css`, `manifest.json`, `icons/`) are plain, unprocessed sources.
 
 During development, use `npm run watch` to rebuild automatically on every save.
 
@@ -37,6 +46,14 @@ npm run package
 ```
 
 This builds first, then zips everything (excluding `node_modules/`, `src/`, and other non-extension files) into `gh-pr-reviewer.xpi`.
+
+### Package sources for Mozilla review
+
+```bash
+npm run source-zip
+```
+
+Produces `gh-pr-reviewer-sources.zip` containing `src/`, static extension files, `package.json`, `package-lock.json`, and this README — everything needed to reproduce the build.
 
 ## Installation
 
