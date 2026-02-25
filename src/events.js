@@ -1,11 +1,12 @@
 import { state } from './state.js';
-import { getFilePathForRow, getSideChar, getLineContent } from './dom.js';
+import { getFilePathForRow, getSideChar, getLineContent, isEmptyLine } from './dom.js';
 import { getOrCreateFileSides, scheduleSave } from './storage.js';
 import { setLineVisualState } from './visual.js';
 import { updateFileProgress } from './progress.js';
 
 function handleLineNumberClick(event) {
   const td = event.currentTarget;
+  if (isEmptyLine(td)) return;
   const content = getLineContent(td);
   if (content === null) return;
 

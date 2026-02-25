@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { tableForFilePath, getSideChar, getLineContent } from './dom.js';
+import { tableForFilePath, getSideChar, getLineContent, isEmptyLine } from './dom.js';
 
 export function updateFileProgress(filePath) {
   const table = tableForFilePath(filePath);
@@ -11,6 +11,7 @@ export function updateFileProgress(filePath) {
   const seen = new Set();
   let totalLines = 0, reviewedCount = 0;
   for (const td of cells) {
+    if (isEmptyLine(td)) continue;
     const key = td.getAttribute('data-diff-side') + ':' + td.getAttribute('data-line-number');
     if (seen.has(key)) continue;
     seen.add(key);

@@ -1,3 +1,5 @@
 node_modules/
 content-script.js
 *.xpi
+gh-pr-reviewer-sources.zip
+.DS_Store

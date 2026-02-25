@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { getFilePathForRow, getSideChar, getLineContent, tableForFilePath } from './dom.js';
+import { getFilePathForRow, getSideChar, getLineContent, tableForFilePath, isEmptyLine, isEmptyRow } from './dom.js';
 import { getOrCreateFileSides, scheduleSave } from './storage.js';
 import { setLineVisualState } from './visual.js';
 import { updateFileProgress } from './progress.js';
@@ -25,6 +25,7 @@ function toggleCurrentLine() {
 function markCurrentLine() {
   if (!state.lastHoveredTd) return;
   const td = state.lastHoveredTd;
+  if (isEmptyLine(td)) return;
   const content = getLineContent(td);
   if (content === null) return;
   const tr = td.closest('tr');
@@ -68,6 +69,7 @@ function markAllInFileUntilHere() {
   for (let i = startIdx; i <= anchorIdx; i++) {
     const tr = allRows[i];
     if (tr.querySelector('td.diff-hunk-cell')) continue;
+    if (isEmptyRow(tr)) continue;
 
     const tds = tr.querySelectorAll('td.new-diff-line-number[data-line-number]:not(.diff-line-number-neutral)');
     if (tds.length === 0) continue; // context-only row, skip
@@ -104,7 +106,7 @@ function navigateToUnreviewed(direction) {
   // Collect diff rows that are not reviewed and not hunk headers
   const rows = Array.from(
     document.querySelectorAll('tr.diff-line-row:not(.pr-line-reviewed)')
-  ).filter(tr => !tr.querySelector('td.diff-hunk-cell'));
+  ).filter(tr => !tr.querySelector('td.diff-hunk-cell') && !isEmptyRow(tr));
 
   if (rows.length === 0) {
     showToast('All lines reviewed!');

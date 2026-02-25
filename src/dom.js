@@ -37,6 +37,24 @@ export function getLineContent(td) {
   return td.nextElementSibling?.textContent ?? null;
 }
 
+export function isEmptyLine(td) {
+  const codeCell = td.nextElementSibling;
+  if (!codeCell) return false;
+  // New GitHub format: actual content lives in .diff-text-inner (the +/- marker is a sibling span)
+  const inner = codeCell.querySelector('.diff-text-inner');
+  if (inner) return inner.textContent === '';
+  // Old GitHub format: strip .blob-code-marker then check for whitespace
+  const marker = codeCell.querySelector('.blob-code-marker');
+  const text = codeCell.textContent;
+  return (marker ? text.slice(marker.textContent.length) : text).trim() === '';
+}
+
+export function isEmptyRow(tr) {
+  const tds = tr.querySelectorAll('td.new-diff-line-number[data-line-number]:not(.diff-line-number-neutral)');
+  if (tds.length === 0) return false;
+  return Array.from(tds).every(isEmptyLine);
+}
+
 export function findTableByFilePath(filePath) {
   // Fallback: search all file regions for matching button[data-file-path]
   const regions = document.querySelectorAll('div[role="region"]');
