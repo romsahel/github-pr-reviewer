@@ -1,5 +1,4 @@
-import { state } from './state.js';
-import { tableForFilePath, getSideChar, getLineKey, isEmptyLine } from './dom.js';
+import { tableForFilePath, isEmptyLine } from './dom.js';
 
 export function updateFileProgress(filePath) {
   const table = tableForFilePath(filePath);
@@ -7,7 +6,6 @@ export function updateFileProgress(filePath) {
 
   // Count total unique (side, lineNumber) pairs visible in DOM, and reviewed ones by content
   const cells = table.querySelectorAll('td.new-diff-line-number[data-line-number]:not(.diff-line-number-neutral)');
-  const sides = state.reviewState.get(filePath) || { L: new Set(), R: new Set() };
   const seen = new Set();
   let totalLines = 0, reviewedCount = 0;
   for (const td of cells) {
@@ -16,8 +14,8 @@ export function updateFileProgress(filePath) {
     if (seen.has(key)) continue;
     seen.add(key);
     totalLines++;
-    const lineKey = getLineKey(td);
-    if (lineKey !== null && sides[getSideChar(td)].has(lineKey)) reviewedCount++;
+    const tr = td.closest('tr');
+    if (tr && tr.classList.contains('pr-line-reviewed')) reviewedCount++;
   }
 
   // Find or create the progress badge in the file header

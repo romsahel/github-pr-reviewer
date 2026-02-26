@@ -23,9 +23,9 @@ export function setLineVisualState(tr, isReviewed) {
 export function applyStateToDOM() {
   const cells = document.querySelectorAll('td.new-diff-line-number[data-line-number]');
 
-  // Track which stored keys were matched exactly, and record the first DOM td per content for fallback.
-  const exactMatchedKeys = new Set();     // `${filePath}:${sideChar}:${lineKey}`
-  const firstTrByContent = new Map();     // `${filePath}:${sideChar}:${content}` → tr
+  const exactMatchedKeys = new Set();  // `${filePath}:${sideChar}:${lineKey}`
+  const exactMatchedTrs = new Set();   // trs already marked via exact match
+  const trsByContent = new Map();      // `${filePath}:${sideChar}:${content}` → tr[] (DOM order)
 
   for (const td of cells) {
     const tr = td.closest('tr');
@@ -42,23 +42,38 @@ export function applyStateToDOM() {
     if (sides[sideChar].has(lineKey)) {
       setLineVisualState(tr, true);
       exactMatchedKeys.add(`${filePath}:${sideChar}:${lineKey}`);
+      exactMatchedTrs.add(tr);
     }
 
-    // Build first-occurrence index for pass 2 fallback
+    // Build per-content DOM occurrence list for pass 2 fallback
     const content = lineKey.slice(lineKey.indexOf(':') + 1);
     const occKey = `${filePath}:${sideChar}:${content}`;
-    if (!firstTrByContent.has(occKey)) firstTrByContent.set(occKey, tr);
+    if (!trsByContent.has(occKey)) trsByContent.set(occKey, []);
+    trsByContent.get(occKey).push(tr);
   }
 
-  // Pass 2: for stored keys with no exact match, mark the first DOM occurrence with that content.
+  // Pass 2: group unmatched stored keys by content, then mark the first N available occurrences
+  // (skipping rows already covered by exact matches), where N = number of unmatched keys.
+  const fallbackCounts = new Map(); // occKey → number of stored keys needing fallback
   for (const [filePath, sides] of state.reviewState) {
     for (const sideChar of ['L', 'R']) {
       for (const lineKey of sides[sideChar]) {
         if (exactMatchedKeys.has(`${filePath}:${sideChar}:${lineKey}`)) continue;
         const content = lineKey.slice(lineKey.indexOf(':') + 1);
-        const tr = firstTrByContent.get(`${filePath}:${sideChar}:${content}`);
-        if (tr) setLineVisualState(tr, true);
+        const occKey = `${filePath}:${sideChar}:${content}`;
+        fallbackCounts.set(occKey, (fallbackCounts.get(occKey) || 0) + 1);
       }
+    }
+  }
+
+  for (const [occKey, count] of fallbackCounts) {
+    const trs = trsByContent.get(occKey) || [];
+    let marked = 0;
+    for (const tr of trs) {
+      if (marked >= count) break;
+      if (exactMatchedTrs.has(tr)) continue;
+      setLineVisualState(tr, true);
+      marked++;
     }
   }
 }
