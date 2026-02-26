@@ -6,4 +6,6 @@ export const state = {
   diffObserver: null,
   urlObserver: null,
   lastURL: location.href,
+  totalLinesEver: 0,
+  shownMilestones: new Set(),
 };

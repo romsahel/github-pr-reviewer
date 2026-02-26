@@ -3,6 +3,7 @@ import { getFilePathForRow, getSideChar, getLineContent, isEmptyLine } from './d
 import { getOrCreateFileSides, scheduleSave } from './storage.js';
 import { setLineVisualState } from './visual.js';
 import { updateFileProgress } from './progress.js';
+import { checkMilestone } from './toast.js';
 
 function handleLineNumberClick(event) {
   const td = event.currentTarget;
@@ -24,14 +25,20 @@ function handleLineNumberClick(event) {
   const isNowReviewed = !sides[side].has(content);
 
   if (isNowReviewed) {
+    const prev = state.totalLinesEver;
     sides[side].add(content);
+    state.totalLinesEver++;
+    setLineVisualState(tr, true);
+    updateFileProgress(filePath);
+    scheduleSave();
+    checkMilestone(prev);
   } else {
     sides[side].delete(content);
+    state.totalLinesEver = Math.max(0, state.totalLinesEver - 1);
+    setLineVisualState(tr, false);
+    updateFileProgress(filePath);
+    scheduleSave();
   }
-
-  setLineVisualState(tr, isNowReviewed);
-  updateFileProgress(filePath);
-  scheduleSave();
 }
 
 export function bindLineNumberClicks(root) {

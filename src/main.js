@@ -6,6 +6,7 @@ import { applyStateToDOM } from './visual.js';
 import { updateAllFileProgress } from './progress.js';
 import { onKeyDown, onMessage } from './keyboard.js';
 import { startDiffObserver, startURLObserver } from './spa.js';
+import { initMilestones } from './toast.js';
 
 async function initForCurrentPR() {
   const pr = parsePRFromURL(location.href);
@@ -17,6 +18,23 @@ async function initForCurrentPR() {
   console.log('[PR Reviewer] Parsed PR:', pr);
   state.storageKey = buildStorageKey(pr.owner, pr.repo, pr.prNumber);
   state.reviewState = await loadState(state.storageKey);
+
+  // Compute global total across all PRs for milestone tracking
+  try {
+    const allData = await browser.storage.local.get(null);
+    let total = 0;
+    for (const [key, prData] of Object.entries(allData)) {
+      if (!key.startsWith('pr:') || typeof prData !== 'object') continue;
+      for (const sides of Object.values(prData)) {
+        total += (sides.L || []).length + (sides.R || []).length;
+      }
+    }
+    state.totalLinesEver = total;
+    initMilestones(total);
+  } catch (e) {
+    state.totalLinesEver = 0;
+    initMilestones(0);
+  }
 
   bindLineNumberClicks();
   applyStateToDOM();

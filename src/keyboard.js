@@ -3,19 +3,7 @@ import { getFilePathForRow, getSideChar, getLineContent, tableForFilePath, isEmp
 import { getOrCreateFileSides, scheduleSave } from './storage.js';
 import { setLineVisualState } from './visual.js';
 import { updateFileProgress } from './progress.js';
-
-function showToast(message) {
-  let toast = document.getElementById('pr-reviewer-toast');
-  if (!toast) {
-    toast = document.createElement('div');
-    toast.id = 'pr-reviewer-toast';
-    document.body.appendChild(toast);
-  }
-  toast.textContent = message;
-  toast.classList.add('visible');
-  clearTimeout(toast._timer);
-  toast._timer = setTimeout(() => toast.classList.remove('visible'), 2500);
-}
+import { showToast, checkMilestone } from './toast.js';
 
 function toggleCurrentLine() {
   if (!state.lastHoveredTd) return;
@@ -35,10 +23,13 @@ function markCurrentLine() {
   const side = getSideChar(td);
   const sides = getOrCreateFileSides(filePath);
   if (sides[side].has(content)) return; // already reviewed
+  const prev = state.totalLinesEver;
   sides[side].add(content);
+  state.totalLinesEver++;
   setLineVisualState(tr, true);
   updateFileProgress(filePath);
   scheduleSave();
+  checkMilestone(prev);
 }
 
 function markAllInFileUntilHere() {
@@ -64,7 +55,7 @@ function markAllInFileUntilHere() {
     }
   }
 
-  let changed = false;
+  let newCount = 0;
 
   for (let i = startIdx; i <= anchorIdx; i++) {
     const tr = allRows[i];
@@ -80,15 +71,18 @@ function markAllInFileUntilHere() {
       const sides = getOrCreateFileSides(filePath);
       if (!sides[side].has(content)) {
         sides[side].add(content);
-        changed = true;
+        newCount++;
       }
     }
     setLineVisualState(tr, true);
   }
 
-  if (changed) {
+  if (newCount > 0) {
+    const prev = state.totalLinesEver;
+    state.totalLinesEver += newCount;
     updateFileProgress(filePath);
     scheduleSave();
+    checkMilestone(prev);
   }
 }
 
