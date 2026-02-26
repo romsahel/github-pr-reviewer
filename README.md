@@ -2,6 +2,14 @@
 
 A Firefox extension that lets you mark individual diff lines as reviewed while going through a pull request. State persists across reloads and navigations.
 
+## Why I built this
+
+GitHub's built-in "viewed" toggle works at the file level — too coarse for serious review work. I built this extension to solve three personal pain points:
+
+- **Impatience** — I have a tendency to skip ahead while reviewing. Explicitly marking a line as reviewed forces me to consciously read it before moving on.
+- **Review flow** — I like to follow the code as I review: when a function is called, I jump to its definition to understand the implementation. That kind of non-linear reading makes it hard to remember where I was and what I'd already covered.
+- **Interruptions** — I sometimes get interrupted mid-review. File-level tracking isn't bite-sized enough to resume confidently; line-level state lets me pick up exactly where I left off.
+
 ## Features
 
 - **Click any line number** to mark it as reviewed (light blue highlight + ✓)
