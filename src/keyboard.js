@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { getFilePathForRow, getSideChar, getLineContent, tableForFilePath, isEmptyLine, isEmptyRow } from './dom.js';
+import { getFilePathForRow, getSideChar, getLineKey, tableForFilePath, isEmptyLine, isEmptyRow } from './dom.js';
 import { getOrCreateFileSides, scheduleSave } from './storage.js';
 import { setLineVisualState } from './visual.js';
 import { updateFileProgress } from './progress.js';
@@ -14,17 +14,17 @@ function markCurrentLine() {
   if (!state.lastHoveredTd) return;
   const td = state.lastHoveredTd;
   if (isEmptyLine(td)) return;
-  const content = getLineContent(td);
-  if (content === null) return;
+  const lineKey = getLineKey(td);
+  if (lineKey === null) return;
   const tr = td.closest('tr');
   if (!tr || tr.querySelector('td.diff-hunk-cell')) return;
   const filePath = getFilePathForRow(tr);
   if (!filePath) return;
   const side = getSideChar(td);
   const sides = getOrCreateFileSides(filePath);
-  if (sides[side].has(content)) return; // already reviewed
+  if (sides[side].has(lineKey)) return; // already reviewed
   const prev = state.totalLinesEver;
-  sides[side].add(content);
+  sides[side].add(lineKey);
   state.totalLinesEver++;
   setLineVisualState(tr, true);
   updateFileProgress(filePath);
@@ -65,12 +65,12 @@ function markAllInFileUntilHere() {
     const tds = tr.querySelectorAll('td.new-diff-line-number[data-line-number]:not(.diff-line-number-neutral)');
     if (tds.length === 0) continue; // context-only row, skip
     for (const td of tds) {
-      const content = getLineContent(td);
-      if (content === null) continue;
+      const lineKey = getLineKey(td);
+      if (lineKey === null) continue;
       const side = getSideChar(td);
       const sides = getOrCreateFileSides(filePath);
-      if (!sides[side].has(content)) {
-        sides[side].add(content);
+      if (!sides[side].has(lineKey)) {
+        sides[side].add(lineKey);
         newCount++;
       }
     }

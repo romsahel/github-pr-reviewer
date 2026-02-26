@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { tableForFilePath, getSideChar, getLineContent, isEmptyLine } from './dom.js';
+import { tableForFilePath, getSideChar, getLineKey, isEmptyLine } from './dom.js';
 
 export function updateFileProgress(filePath) {
   const table = tableForFilePath(filePath);
@@ -16,8 +16,8 @@ export function updateFileProgress(filePath) {
     if (seen.has(key)) continue;
     seen.add(key);
     totalLines++;
-    const content = getLineContent(td);
-    if (content !== null && sides[getSideChar(td)].has(content)) reviewedCount++;
+    const lineKey = getLineKey(td);
+    if (lineKey !== null && sides[getSideChar(td)].has(lineKey)) reviewedCount++;
   }
 
   // Find or create the progress badge in the file header

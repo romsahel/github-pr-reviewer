@@ -26,6 +26,7 @@ async function initForCurrentPR() {
     for (const [key, prData] of Object.entries(allData)) {
       if (!key.startsWith('pr:') || typeof prData !== 'object') continue;
       for (const sides of Object.values(prData)) {
+        if (typeof sides !== 'object' || sides === null || Array.isArray(sides)) continue;
         total += (sides.L || []).length + (sides.R || []).length;
       }
     }

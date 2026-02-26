@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { getFilePathForRow, getSideChar, getLineContent, isEmptyLine } from './dom.js';
+import { getFilePathForRow, getSideChar, getLineKey, isEmptyLine } from './dom.js';
 import { getOrCreateFileSides, scheduleSave } from './storage.js';
 import { setLineVisualState } from './visual.js';
 import { updateFileProgress } from './progress.js';
@@ -8,8 +8,8 @@ import { checkMilestone } from './toast.js';
 function handleLineNumberClick(event) {
   const td = event.currentTarget;
   if (isEmptyLine(td)) return;
-  const content = getLineContent(td);
-  if (content === null) return;
+  const lineKey = getLineKey(td);
+  if (lineKey === null) return;
 
   const tr = td.closest('tr');
   if (!tr) return;
@@ -22,18 +22,18 @@ function handleLineNumberClick(event) {
 
   const side = getSideChar(td);
   const sides = getOrCreateFileSides(filePath);
-  const isNowReviewed = !sides[side].has(content);
+  const isNowReviewed = !sides[side].has(lineKey);
 
   if (isNowReviewed) {
     const prev = state.totalLinesEver;
-    sides[side].add(content);
+    sides[side].add(lineKey);
     state.totalLinesEver++;
     setLineVisualState(tr, true);
     updateFileProgress(filePath);
     scheduleSave();
     checkMilestone(prev);
   } else {
-    sides[side].delete(content);
+    sides[side].delete(lineKey);
     state.totalLinesEver = Math.max(0, state.totalLinesEver - 1);
     setLineVisualState(tr, false);
     updateFileProgress(filePath);

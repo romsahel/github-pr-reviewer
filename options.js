@@ -30,6 +30,7 @@ function computeStats(allData) {
     if (!key.startsWith('pr:')) continue;
     prCount++;
     for (const [, sides] of Object.entries(prData)) {
+      if (typeof sides !== 'object' || sides === null || Array.isArray(sides)) continue;
       fileCount++;
       lineCount += (sides.L || []).length + (sides.R || []).length;
     }
@@ -51,10 +52,9 @@ function renderPRList(allData) {
     const parsed = extractPRKey(key);
     if (!parsed) continue;
 
-    const fileCount = Object.keys(prData).length;
-    const lineCount = Object.values(prData).reduce(
-      (sum, s) => sum + (s.L || []).length + (s.R || []).length, 0
-    );
+    const fileSides = Object.values(prData).filter(s => typeof s === 'object' && s !== null && !Array.isArray(s));
+    const fileCount = fileSides.length;
+    const lineCount = fileSides.reduce((sum, s) => sum + (s.L || []).length + (s.R || []).length, 0);
 
     const li = document.createElement('li');
 

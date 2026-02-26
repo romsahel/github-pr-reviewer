@@ -37,6 +37,13 @@ export function getLineContent(td) {
   return td.nextElementSibling?.textContent ?? null;
 }
 
+export function getLineKey(td) {
+  const lineNum = td.dataset.lineNumber;
+  const content = getLineContent(td);
+  if (content === null || !lineNum) return null;
+  return `${lineNum}:${content}`;
+}
+
 export function isEmptyLine(td) {
   const codeCell = td.nextElementSibling;
   if (!codeCell) return false;

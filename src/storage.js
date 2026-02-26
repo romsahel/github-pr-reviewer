@@ -5,7 +5,7 @@ export function buildStorageKey(owner, repo, prNumber) {
 }
 
 export function serializeState(reviewState) {
-  const obj = {};
+  const obj = { _v: 2 };
   for (const [filePath, sides] of reviewState) {
     obj[filePath] = {
       L: Array.from(sides.L).sort(),
@@ -17,12 +17,12 @@ export function serializeState(reviewState) {
 
 export function deserializeState(obj) {
   const map = new Map();
-  if (!obj || typeof obj !== 'object') return map;
-  function isLegacy(arr) { return arr.length > 0 && typeof arr[0] === 'number'; }
+  if (!obj || typeof obj !== 'object' || obj._v !== 2) return map;
   for (const [filePath, sides] of Object.entries(obj)) {
+    if (filePath === '_v') continue;
     map.set(filePath, {
-      L: new Set(!isLegacy(sides.L) && Array.isArray(sides.L) ? sides.L : []),
-      R: new Set(!isLegacy(sides.R) && Array.isArray(sides.R) ? sides.R : []),
+      L: new Set(Array.isArray(sides.L) ? sides.L : []),
+      R: new Set(Array.isArray(sides.R) ? sides.R : []),
     });
   }
   return map;
