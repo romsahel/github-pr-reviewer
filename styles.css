@@ -27,6 +27,11 @@
   --pr-toast-bg:          #1f2328;
   --pr-toast-color:       #f6f8fa;
   --pr-toast-shadow:      rgba(0, 0, 0, 0.3);
+
+  --pr-storyline-bg:      #f0f4ff;
+  --pr-storyline-fg:      #24292f;
+  --pr-storyline-bd:      #0969da;
+  --pr-storyline-muted:   #57606a;
 }
 
 /* System dark preference — covers GitHub "auto" mode */
@@ -52,6 +57,11 @@
     --pr-toast-bg:          #30363d;
     --pr-toast-color:       #e6edf3;
     --pr-toast-shadow:      rgba(0, 0, 0, 0.6);
+
+    --pr-storyline-bg:      #1c2333;
+    --pr-storyline-fg:      #e6edf3;
+    --pr-storyline-bd:      #58a6ff;
+    --pr-storyline-muted:   #8b949e;
   }
 }
 
@@ -77,6 +87,11 @@ html[data-color-mode="dark"] {
   --pr-toast-bg:          #30363d;
   --pr-toast-color:       #e6edf3;
   --pr-toast-shadow:      rgba(0, 0, 0, 0.6);
+
+  --pr-storyline-bg:      #1c2333;
+  --pr-storyline-fg:      #e6edf3;
+  --pr-storyline-bd:      #58a6ff;
+  --pr-storyline-muted:   #8b949e;
 }
 
 /* GitHub explicitly set to light — restores light tokens when system is dark */
@@ -101,6 +116,11 @@ html[data-color-mode="light"] {
   --pr-toast-bg:          #1f2328;
   --pr-toast-color:       #f6f8fa;
   --pr-toast-shadow:      rgba(0, 0, 0, 0.3);
+
+  --pr-storyline-bg:      #f0f4ff;
+  --pr-storyline-fg:      #24292f;
+  --pr-storyline-bd:      #0969da;
+  --pr-storyline-muted:   #57606a;
 }
 
 /* ── Reviewed row ────────────────────────────────────────────────────────── */
@@ -195,4 +215,79 @@ tr.pr-line-flash td {
 #pr-reviewer-toast.visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* ── Storyline chapter banners ─────────────────────────────────────────────── */
+.pr-storyline-chapter {
+  background: var(--pr-storyline-bg);
+  color: var(--pr-storyline-fg);
+  border-left: 3px solid var(--pr-storyline-bd);
+  padding: 8px 16px;
+  margin: 16px 0 4px;
+  border-radius: 4px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+.pr-storyline-chapter-header {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.pr-storyline-chapter-number {
+  color: var(--pr-storyline-bd);
+  margin-right: 4px;
+  font-weight: 700;
+}
+
+.pr-storyline-chapter-narrative {
+  margin-top: 4px;
+  font-size: 0.8125rem;
+  color: var(--pr-storyline-muted);
+}
+
+.pr-storyline-chapter-narrative summary {
+  cursor: pointer;
+  user-select: none;
+  font-weight: 500;
+}
+
+.pr-storyline-chapter-narrative p {
+  margin: 4px 0 0;
+  line-height: 1.5;
+}
+
+.pr-storyline-chapter-link {
+  color: var(--pr-storyline-bd);
+  text-decoration: none;
+}
+
+.pr-storyline-chapter-link:hover {
+  text-decoration: underline;
+}
+
+/* ── Storyline toggle button ───────────────────────────────────────────────── */
+.pr-storyline-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border: 1px solid var(--pr-badge-empty-bd);
+  border-radius: 6px;
+  background: var(--pr-badge-empty-bg);
+  color: var(--pr-badge-empty-fg);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 8px;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.pr-storyline-toggle:hover {
+  border-color: var(--pr-storyline-bd);
+  color: var(--pr-storyline-bd);
+}
+
+.pr-storyline-toggle.active {
+  background: var(--pr-storyline-bg);
+  color: var(--pr-storyline-bd);
+  border-color: var(--pr-storyline-bd);
 }

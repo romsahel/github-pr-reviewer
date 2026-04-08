@@ -4,6 +4,7 @@ import { buildStorageKey, loadState } from './storage.js';
 import { bindLineNumberClicks } from './events.js';
 import { applyStateToDOM } from './visual.js';
 import { updateAllFileProgress } from './progress.js';
+import { reapplyStoryline, resetStoryline, initStoryline } from './storyline.js';
 
 let debounceTimer = null;
 function debounce(fn, delay) {
@@ -17,6 +18,7 @@ const onDiffMutation = debounce(function () {
   bindLineNumberClicks();
   applyStateToDOM();
   updateAllFileProgress();
+  reapplyStoryline();
 }, 150);
 
 export function startDiffObserver() {
@@ -48,12 +50,14 @@ export async function onURLChange() {
   if (newKey !== state.storageKey) {
     state.storageKey = newKey;
     state.reviewState = await loadState(state.storageKey);
+    resetStoryline();
   }
 
   bindLineNumberClicks();
   applyStateToDOM();
   updateAllFileProgress();
   startDiffObserver();
+  await initStoryline();
 }
 
 export function startURLObserver() {

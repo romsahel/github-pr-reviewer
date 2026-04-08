@@ -7,6 +7,7 @@ import { updateAllFileProgress } from './progress.js';
 import { onKeyDown, onMessage } from './keyboard.js';
 import { startDiffObserver, startURLObserver } from './spa.js';
 import { initMilestones } from './toast.js';
+import { initStoryline } from './storyline.js';
 
 async function initForCurrentPR() {
   const pr = parsePRFromURL(location.href);
@@ -41,6 +42,7 @@ async function initForCurrentPR() {
   applyStateToDOM();
   updateAllFileProgress();
   startDiffObserver();
+  await initStoryline();
   console.log('[PR Reviewer] Initialization complete!');
 }
 

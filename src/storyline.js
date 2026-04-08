@@ -1,0 +1,368 @@
+import { state } from './state.js';
+import { parsePRFromURL } from './dom.js';
+
+const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+const STORYLINE_STORAGE_PREFIX = 'storyline:';
+
+// ── State ───────────────────────────────────────────────────────────────────
+let storylineData = null;
+let storylineActive = false;
+let originalOrder = []; // regions in original DOM order
+let reorderingInProgress = false;
+
+// ── Fetch & Cache ───────────────────────────────────────────────────────────
+
+function buildStorylineCacheKey(owner, repo, prNumber) {
+  return `${STORYLINE_STORAGE_PREFIX}${owner}/${repo}:${prNumber}`;
+}
+
+function findStorylinePre(doc) {
+  for (const summary of doc.querySelectorAll('details > summary')) {
+    if (summary.textContent.trim() === 'PR Storyline') {
+      return summary.parentElement.querySelector('pre');
+    }
+  }
+  return null;
+}
+
+async function fetchStorylineFromPage(owner, repo, prNumber) {
+  const url = `https://github.com/${owner}/${repo}/pull/${prNumber}`;
+  try {
+    const resp = await fetch(url, { credentials: 'same-origin' });
+    console.log('[PR Reviewer] Storyline fetch:', resp.status, resp.ok, resp.url);
+    if (!resp.ok) return null;
+    const html = await resp.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const pre = findStorylinePre(doc);
+    if (!pre) return null;
+    return JSON.parse(pre.textContent.trim());
+  } catch (e) {
+    console.warn('[PR Reviewer] Failed to fetch storyline:', e);
+    return null;
+  }
+}
+
+async function getCachedStoryline(cacheKey) {
+  try {
+    const result = await browser.storage.local.get(cacheKey);
+    const cached = result[cacheKey];
+    if (!cached) return undefined; // no cache entry
+    if (Date.now() - cached.timestamp > CACHE_TTL_MS) return undefined; // expired
+    return cached.data; // may be null (no storyline exists)
+  } catch {
+    return undefined;
+  }
+}
+
+async function cacheStoryline(cacheKey, data) {
+  try {
+    await browser.storage.local.set({
+      [cacheKey]: { data, timestamp: Date.now() },
+    });
+  } catch (e) {
+    console.warn('[PR Reviewer] Failed to cache storyline:', e);
+  }
+}
+
+export async function fetchStoryline(owner, repo, prNumber) {
+  const cacheKey = buildStorylineCacheKey(owner, repo, prNumber);
+  const cached = await getCachedStoryline(cacheKey);
+  console.log('cached', JSON.stringify(cached, null, 2));
+  if (cached) return cached;
+
+  const data = await fetchStorylineFromPage(owner, repo, prNumber);
+  await cacheStoryline(cacheKey, data);
+  return data;
+}
+
+// ── DOM Reordering ──────────────────────────────────────────────────────────
+
+function getFilePathFromRegion(region) {
+  const btn = region.querySelector('button[data-file-path]');
+  if (btn) return btn.getAttribute('data-file-path');
+  const table = region.querySelector('table[data-diff-anchor]');
+  if (table) {
+    const label = table.getAttribute('aria-label') || '';
+    if (label.startsWith('Diff for: ')) return label.slice('Diff for: '.length).trim();
+  }
+  return null;
+}
+
+function findFileWrapper(filePath) {
+  const container = getDiffContainer();
+  if (!container) return null;
+  const regions = container.querySelectorAll('div[role="region"]');
+  for (const region of regions) {
+    const btn = region.querySelector('button[data-file-path]');
+    if (btn && btn.getAttribute('data-file-path') === filePath) return getFileWrapper(region);
+    const table = region.querySelector('table[data-diff-anchor]');
+    if (table) {
+      const label = table.getAttribute('aria-label') || '';
+      if (label === `Diff for: ${filePath}`) return getFileWrapper(region);
+    }
+  }
+  return null;
+}
+
+// Get the direct-child wrapper of the diff container that holds a given region
+function getFileWrapper(region) {
+  const container = getDiffContainer();
+  if (!container) return null;
+  let el = region;
+  while (el && el.parentElement !== container) {
+    el = el.parentElement;
+  }
+  return el;
+}
+
+function saveOriginalOrder() {
+  const container = getDiffContainer();
+  if (!container) return;
+  // Save the container's direct children (wrappers) in their original order
+  const children = Array.from(container.children).filter(c => c.tagName === 'DIV');
+  if (children.length === 0) return;
+
+  if (originalOrder.length === 0) {
+    originalOrder = children;
+    console.log('[PR Reviewer] saveOriginalOrder: saved', originalOrder.length, 'wrappers');
+  } else {
+    for (const child of children) {
+      if (!originalOrder.includes(child)) {
+        originalOrder.push(child);
+      }
+    }
+  }
+}
+
+function getDiffContainer() {
+  return document.querySelector('[data-testid="progressive-diffs-list"]')
+    || document.querySelector('.js-diff-progressive-container');
+}
+
+function removeChapterBanners() {
+  document.querySelectorAll('.pr-storyline-chapter').forEach(el => el.remove());
+}
+
+export function applyStorylineOrder(data) {
+  if (!data || !data.chapters) return;
+  reorderingInProgress = true;
+
+  const container = getDiffContainer();
+  if (!container) return;
+
+  saveOriginalOrder();
+  removeChapterBanners();
+
+  // Build set of chapter file paths
+  const chapterFilePaths = new Set();
+  for (const chapter of data.chapters) {
+    for (const f of chapter.files) chapterFilePaths.add(f);
+  }
+
+  // Collect ungrouped wrappers before we start moving things
+  const ungroupedWrappers = [];
+  for (const wrapper of Array.from(container.children)) {
+    if (wrapper.tagName !== 'DIV') continue;
+    const region = wrapper.querySelector('div[role="region"]') || (wrapper.getAttribute('role') === 'region' ? wrapper : null);
+    if (!region) {
+      ungroupedWrappers.push(wrapper);
+      continue;
+    }
+    const filePath = getFilePathFromRegion(region);
+    if (!filePath || !chapterFilePaths.has(filePath)) {
+      ungroupedWrappers.push(wrapper);
+    }
+  }
+
+  // Move chapter files into order, injecting banners
+  for (let i = 0; i < data.chapters.length; i++) {
+    const chapter = data.chapters[i];
+    const banner = createChapterBanner(i + 1, chapter, data.chapters.length);
+    container.appendChild(banner);
+
+    for (const filePath of chapter.files) {
+      const wrapper = findFileWrapper(filePath);
+      if (wrapper) container.appendChild(wrapper);
+    }
+  }
+
+  // Move ungrouped files to the bottom
+  for (const wrapper of ungroupedWrappers) {
+    container.appendChild(wrapper);
+  }
+  reorderingInProgress = false;
+}
+
+function createChapterBanner(chapterNum, chapter, totalChapters) {
+  const banner = document.createElement('div');
+  banner.className = 'pr-storyline-chapter';
+  banner.id = `pr-storyline-chapter-${chapterNum}`;
+
+  const header = document.createElement('div');
+  header.className = 'pr-storyline-chapter-header';
+  header.innerHTML = `<span class="pr-storyline-chapter-number">${chapterNum}/${totalChapters}</span> ${escapeHtml(chapter.title)}`;
+  banner.appendChild(header);
+
+  if (chapter.narrative) {
+    const details = document.createElement('details');
+    details.className = 'pr-storyline-chapter-narrative';
+    const summary = document.createElement('summary');
+    summary.textContent = 'Context';
+    details.appendChild(summary);
+    const p = document.createElement('p');
+    p.innerHTML = autoLinkChapterRefs(escapeHtml(chapter.narrative));
+    details.appendChild(p);
+    banner.appendChild(details);
+  }
+
+  return banner;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function autoLinkChapterRefs(html) {
+  return html.replace(/Chapter (\d+)/g, (match, num) => {
+    return `<a href="#pr-storyline-chapter-${num}" class="pr-storyline-chapter-link">${match}</a>`;
+  });
+}
+
+// ── Restore Original Order ──────────────────────────────────────────────────
+
+function restoreOriginalOrder() {
+  reorderingInProgress = true;
+  removeChapterBanners();
+  const container = getDiffContainer();
+  console.log('[PR Reviewer] restoreOriginalOrder: container=', container, 'originalOrder.length=', originalOrder.length);
+  if (!container) { reorderingInProgress = false; return; }
+  // Re-append regions in original order
+  for (const region of originalOrder) {
+    console.log('[PR Reviewer] restore: moving region', getFilePathFromRegion(region), 'parentElement=', region.parentElement === container);
+    container.appendChild(region);
+  }
+  // Log final order
+  const finalRegions = container.querySelectorAll(':scope > div[role="region"]');
+  console.log('[PR Reviewer] restore done, final region count:', finalRegions.length, 'order:', Array.from(finalRegions).map(r => getFilePathFromRegion(r)));
+  reorderingInProgress = false;
+}
+
+// ── Toggle ──────────────────────────────────────────────────────────────────
+
+function createToggleButton() {
+  const existing = document.querySelector('.pr-storyline-toggle');
+  if (existing) return existing;
+
+  const btn = document.createElement('button');
+  btn.className = 'pr-storyline-toggle active';
+  btn.textContent = 'Storyline';
+  btn.title = 'Toggle between storyline order and default file order';
+  btn.addEventListener('click', () => toggleStoryline());
+
+  // Insert into the PR files toolbar, before the file controls (viewed/review button)
+  const toolbar = document.querySelector('section[class*="PullRequestFilesToolbar"]');
+  if (toolbar) {
+    // Insert before the right-side controls (viewed progress / review button)
+    const rightControls = toolbar.querySelector('div[class*="file-controls"]')
+      || toolbar.lastElementChild;
+    if (rightControls) {
+      rightControls.parentElement.insertBefore(btn, rightControls);
+    } else {
+      toolbar.appendChild(btn);
+    }
+  } else {
+    // Fallback: insert before the diff container
+    const container = getDiffContainer();
+    if (container) container.parentElement.insertBefore(btn, container);
+  }
+
+  return btn;
+}
+
+function updateToggleButton() {
+  const btn = document.querySelector('.pr-storyline-toggle');
+  if (!btn) return;
+  btn.classList.toggle('active', storylineActive);
+}
+
+function toggleStoryline() {
+  console.log('[PR Reviewer] toggleStoryline: active=', storylineActive, 'hasData=', !!storylineData, 'originalOrder.length=', originalOrder.length);
+  if (storylineActive) {
+    restoreOriginalOrder();
+    storylineActive = false;
+  } else if (storylineData) {
+    applyStorylineOrder(storylineData);
+    storylineActive = true;
+  }
+  updateToggleButton();
+}
+
+// ── Init ────────────────────────────────────────────────────────────────────
+
+export async function initStoryline() {
+  const pr = parsePRFromURL(location.href);
+  if (!pr) return;
+
+  storylineData = await fetchStoryline(pr.owner, pr.repo, pr.prNumber);
+  if (!storylineData) return;
+
+  console.log('[PR Reviewer] Storyline found, activating');
+  createToggleButton();
+
+  // Save original order before first reorder
+  const container = getDiffContainer();
+  console.log('[PR Reviewer] initStoryline container:', container);
+  if (container) {
+    const directRegions = container.querySelectorAll(':scope > div[role="region"]');
+    const allRegions = container.querySelectorAll('div[role="region"]');
+    console.log('[PR Reviewer] direct child regions:', directRegions.length, 'all nested regions:', allRegions.length);
+    // Log the container's direct children types
+    console.log('[PR Reviewer] container children:', Array.from(container.children).map(c => c.tagName + '[role=' + c.getAttribute('role') + ']'));
+  }
+  saveOriginalOrder();
+
+  storylineActive = true;
+  applyStorylineOrder(storylineData);
+}
+
+function waitForDiffRegions() {
+  return new Promise((resolve) => {
+    const container = getDiffContainer();
+    if (!container) { resolve(); return; }
+    const observer = new MutationObserver(() => {
+      const regions = container.querySelectorAll(':scope > div[role="region"]');
+      if (regions.length > 0) {
+        observer.disconnect();
+        resolve();
+      }
+    });
+    observer.observe(container, { childList: true, subtree: true });
+    // Timeout after 10s
+    setTimeout(() => { observer.disconnect(); resolve(); }, 10000);
+  });
+}
+
+export function reapplyStoryline() {
+  if (reorderingInProgress || !storylineActive || !storylineData) return;
+  const container = getDiffContainer();
+  if (!container) return;
+  // Check if any new wrappers appeared that we haven't tracked
+  const currentChildren = Array.from(container.children).filter(c => c.tagName === 'DIV' && !c.classList.contains('pr-storyline-chapter'));
+  const hasNew = currentChildren.some(c => !originalOrder.includes(c));
+  if (hasNew) {
+    saveOriginalOrder();
+    applyStorylineOrder(storylineData);
+  }
+}
+
+export function resetStoryline() {
+  storylineData = null;
+  storylineActive = false;
+  originalOrder = [];
+  removeChapterBanners();
+  const btn = document.querySelector('.pr-storyline-toggle');
+  if (btn) btn.remove();
+}
