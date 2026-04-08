@@ -191,6 +191,9 @@ export function applyStorylineOrder(data) {
   for (const wrapper of ungroupedWrappers) {
     container.appendChild(wrapper);
   }
+
+  removeLineAnnotations();
+  injectLineAnnotations(data);
   reorderingInProgress = false;
 }
 
@@ -231,10 +234,56 @@ function autoLinkChapterRefs(html) {
   });
 }
 
+// ── Line Annotations ────────────────────────────────────────────────────────
+
+function removeLineAnnotations() {
+  document.querySelectorAll('.pr-storyline-annotation').forEach(el => el.remove());
+}
+
+function injectLineAnnotations(data) {
+  if (!data || !data.chapters) return;
+  for (const chapter of data.chapters) {
+    if (!chapter.lines) continue;
+    for (const line of chapter.lines) {
+      const row = findDiffRow(line.file, line.side, line.lineNumber);
+      if (!row) continue;
+      const annotationRow = document.createElement('tr');
+      annotationRow.className = 'pr-storyline-annotation';
+      const td = document.createElement('td');
+      td.colSpan = row.children.length;
+      td.textContent = line.note;
+      annotationRow.appendChild(td);
+      row.after(annotationRow);
+    }
+  }
+}
+
+function findDiffRow(filePath, side, lineNumber) {
+  const diffSide = side === 'R' ? 'right' : 'left';
+  // Find the file's table
+  const tables = document.querySelectorAll('table[data-diff-anchor]');
+  for (const table of tables) {
+    const label = table.getAttribute('aria-label') || '';
+    const region = table.closest('div[role="region"]');
+    const btn = region && region.querySelector('button[data-file-path]');
+    const tableFilePath = label.startsWith('Diff for: ')
+      ? label.slice('Diff for: '.length).trim()
+      : (btn ? btn.getAttribute('data-file-path') : null);
+    if (tableFilePath !== filePath) continue;
+    // Find the specific line
+    const td = table.querySelector(
+      `td.new-diff-line-number[data-line-number="${lineNumber}"][data-diff-side="${diffSide}"]`
+    );
+    if (td) return td.closest('tr');
+  }
+  return null;
+}
+
 // ── Restore Original Order ──────────────────────────────────────────────────
 
 function restoreOriginalOrder() {
   reorderingInProgress = true;
+  removeLineAnnotations();
   removeChapterBanners();
   const container = getDiffContainer();
   console.log('[PR Reviewer] restoreOriginalOrder: container=', container, 'originalOrder.length=', originalOrder.length);
@@ -259,8 +308,8 @@ function createToggleButton() {
   const btn = document.createElement('button');
   btn.className = 'pr-storyline-toggle active';
   btn.textContent = 'Storyline';
-  btn.title = 'Toggle between storyline order and default file order';
-  btn.addEventListener('click', () => toggleStoryline());
+  btn.title = 'Toggle storyline order (Shift+click to re-fetch)';
+  btn.addEventListener('click', (e) => toggleStoryline(e.shiftKey));
 
   // Insert into the PR files toolbar, before the file controls (viewed/review button)
   const toolbar = document.querySelector('section[class*="PullRequestFilesToolbar"]');
@@ -288,8 +337,25 @@ function updateToggleButton() {
   btn.classList.toggle('active', storylineActive);
 }
 
-function toggleStoryline() {
-  console.log('[PR Reviewer] toggleStoryline: active=', storylineActive, 'hasData=', !!storylineData, 'originalOrder.length=', originalOrder.length);
+async function toggleStoryline(forceRefresh = false) {
+  if (forceRefresh) {
+    const pr = parsePRFromURL(location.href);
+    if (pr) {
+      const cacheKey = buildStorylineCacheKey(pr.owner, pr.repo, pr.prNumber);
+      await browser.storage.local.remove(cacheKey);
+      const data = await fetchStoryline(pr.owner, pr.repo, pr.prNumber);
+      if (data) {
+        storylineData = data;
+        if (storylineActive) {
+          // Re-apply with fresh data
+          applyStorylineOrder(storylineData);
+        }
+        console.log('[PR Reviewer] Storyline re-fetched');
+        return;
+      }
+    }
+  }
+
   if (storylineActive) {
     restoreOriginalOrder();
     storylineActive = false;

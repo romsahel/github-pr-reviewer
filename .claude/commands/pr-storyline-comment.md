@@ -64,6 +64,24 @@ For each chapter:
 
 Keep narratives proportional: a simple rename needs one sentence, a new GenServer needs a paragraph.
 
+### 5b. Add Line Annotations
+
+For each chapter, scan the diff hunks and pick 3-5 lines where something non-obvious happens. Add these as a `lines` array on the chapter.
+
+**What to annotate:**
+- Behavior changes disguised as refactors (e.g., removing `LIMIT 1` changes query cardinality)
+- Subtle side effects
+- Non-obvious patterns (metaprogramming, protocol dispatch, macro usage)
+- Security or correctness implications
+
+**Do NOT annotate:** trivial renames, obvious additions, boilerplate, test assertions, import changes.
+
+Each annotation needs:
+- `file`: the file path (must be in the chapter's `files` list)
+- `side`: `"R"` for added/right side, `"L"` for removed/left side
+- `lineNumber`: the line number as it appears in GitHub's diff gutter
+- `note`: 1-2 sentence explanation of why this line matters
+
 ### 6. Check for Existing Comment
 
 Before posting, check if a storyline comment already exists:
@@ -98,7 +116,15 @@ Format the comment body as:
     {
       "title": "Chapter Title",
       "narrative": "Explanation of why these changes exist and how they connect to other chapters.",
-      "files": ["path/to/file1.ex", "path/to/file2.ex"]
+      "files": ["path/to/file1.ex", "path/to/file2.ex"],
+      "lines": [
+        {
+          "file": "path/to/file1.ex",
+          "side": "R",
+          "lineNumber": 42,
+          "note": "Short explanation of why this line is non-obvious or important."
+        }
+      ]
     }
   ]
 }
