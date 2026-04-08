@@ -12,15 +12,47 @@ GitHub's built-in "viewed" toggle works at the file level — too coarse for ser
 
 ## Features
 
-- **Click any line number** to mark it as reviewed (light blue highlight + ✓)
-- **Click again** to unmark
-- **Keyboard shortcuts** (work anywhere on the diff row, no need to hover the line number):
-  - `r` — mark the hovered line as reviewed
-  - `Shift+R` — mark all lines up to and including the current line (in the current file)
-  - `Shift+N` / `Shift+P` — jump to next / previous unreviewed line
-- **Per-file progress badge** showing how many lines you've reviewed
-- **Persistent state** — survives page reloads and SPA navigations within GitHub
-- **Options page** — view stats, export data as JSON, or clear everything
+### Line-level review tracking
+
+- **Click any line number** to toggle it as reviewed (light blue highlight)
+- **`r`** — mark the hovered line as reviewed (works anywhere on the diff row)
+- **`Shift+R`** — mark all lines from the last reviewed line (or file start) up to the current line
+- Blank lines are automatically excluded from tracking and progress counts
+
+### Navigation
+
+- **`Shift+N`** / **`Shift+P`** — jump to next / previous unreviewed line (wraps around, flashes the target line)
+- **`Alt+R`**, **`Shift+Alt+N`**, **`Shift+Alt+P`** — browser-level commands (work even when the page doesn't have focus)
+
+All keyboard shortcuts can be customized from `about:addons` → GitHub PR Line Reviewer → Settings.
+- **`Alt+D`** — toggle GitHub's native "Viewed" checkbox for the current file
+
+### Progress tracking
+
+- **Per-file badge** next to each filename showing reviewed / total lines (color-coded: gray → yellow → green)
+- When all lines in a file are reviewed, GitHub's "Viewed" checkbox is automatically checked
+
+### Persistence
+
+- Review state is saved per PR to `browser.storage.local` with a 300 ms debounce
+- Lines are identified by number + content, so state survives minor rebases via a two-pass fallback matcher
+- SPA navigation within GitHub is detected automatically — no need to reload the page
+
+### Milestones
+
+- Tracks total lines reviewed across all PRs
+- Toast notifications at 10, 25, 50, 100, 250 lines — then every 250 lines after that
+
+### Dark mode
+
+- Full dark-mode support, respecting GitHub's theme settings (`prefers-color-scheme` and `data-color-mode`)
+
+### Options page
+
+- **Stats dashboard** — total PRs tracked, files reviewed, lines reviewed
+- **PR list** — per-PR breakdown with file and line counts
+- **Export** — download all review data as JSON
+- **Clear** — wipe all stored data (with confirmation)
 
 ## Setup
 
