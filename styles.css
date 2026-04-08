@@ -240,20 +240,27 @@ tr.pr-line-flash td {
 }
 
 .pr-storyline-chapter-narrative {
-  margin-top: 4px;
+  margin-top: 6px;
   font-size: 0.8125rem;
   color: var(--pr-storyline-muted);
-}
-
-.pr-storyline-chapter-narrative summary {
-  cursor: pointer;
-  user-select: none;
-  font-weight: 500;
-}
-
-.pr-storyline-chapter-narrative p {
-  margin: 4px 0 0;
   line-height: 1.5;
+}
+
+.pr-storyline-chapter-narrative code {
+  background: var(--pr-badge-empty-bg);
+  border: 1px solid var(--pr-badge-empty-bd);
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-size: 0.75rem;
+}
+
+.pr-storyline-chapter-narrative ul {
+  margin: 4px 0 0;
+  padding-left: 20px;
+}
+
+.pr-storyline-chapter-narrative li {
+  margin-bottom: 2px;
 }
 
 .pr-storyline-chapter-link {

@@ -16,27 +16,32 @@ function buildStorylineCacheKey(owner, repo, prNumber) {
   return `${STORYLINE_STORAGE_PREFIX}${owner}/${repo}:${prNumber}`;
 }
 
-function findStorylinePre(doc) {
-  for (const summary of doc.querySelectorAll('details > summary')) {
-    if (summary.textContent.trim() === 'PR Storyline') {
-      return summary.parentElement.querySelector('pre');
-    }
-  }
-  return null;
-}
-
 async function fetchStorylineFromPage(owner, repo, prNumber) {
+  // Fetch the PR conversation page and extract raw markdown from edit form textareas
   const url = `https://github.com/${owner}/${repo}/pull/${prNumber}`;
   try {
     const resp = await fetch(url, { credentials: 'same-origin' });
     console.log('[PR Reviewer] Storyline fetch:', resp.status, resp.ok, resp.url);
     if (!resp.ok) return null;
     const html = await resp.text();
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    const pre = findStorylinePre(doc);
-    if (!pre) return null;
-    return JSON.parse(pre.textContent.trim());
+    console.log('[PR Reviewer] Storyline html:', html);
+    // Match by the surrounding details/summary structure — GitHub strips data-* attributes
+    const match = html.match(/<summary>PR Storyline<\/summary>\s*<pre[^>]*>\s*([\s\S]*?)\s*<\/pre>/);
+    console.log('[PR Reviewer] Storyline match:', match);
+    if (match) {
+      // GitHub injects attributes like class="notranslate" and dir="auto" into
+      // HTML tags inside the JSON values — these contain unescaped quotes that
+      // break JSON.parse. Strip all HTML tag attributes before decoding.
+      const cleaned = match[1]
+        .replace(/<(\w+)\s+[^>]*>/g, '<$1>')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'");
+      return JSON.parse(cleaned);
+    }
+    return null;
   } catch (e) {
     console.warn('[PR Reviewer] Failed to fetch storyline:', e);
     return null;
@@ -208,15 +213,10 @@ function createChapterBanner(chapterNum, chapter, totalChapters) {
   banner.appendChild(header);
 
   if (chapter.narrative) {
-    const details = document.createElement('details');
-    details.className = 'pr-storyline-chapter-narrative';
-    const summary = document.createElement('summary');
-    summary.textContent = 'Context';
-    details.appendChild(summary);
-    const p = document.createElement('p');
-    p.innerHTML = autoLinkChapterRefs(escapeHtml(chapter.narrative));
-    details.appendChild(p);
-    banner.appendChild(details);
+    const narrative = document.createElement('div');
+    narrative.className = 'pr-storyline-chapter-narrative';
+    narrative.innerHTML = autoLinkChapterRefs(chapter.narrative);
+    banner.appendChild(narrative);
   }
 
   return banner;

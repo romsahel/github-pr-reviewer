@@ -59,7 +59,14 @@ Before writing chapters:
 For each chapter:
 
 - **Title**: Short, descriptive (e.g., "Data Model", "Evidence Highlighting Logic")
-- **Narrative**: Explain the "why", not just the "what". Call out non-obvious patterns, cross-reference other chapters (e.g., "builds on the struct from Chapter 1"), flag risk areas
+- **Narrative**: HTML string displayed inline on the GitHub diff page. Use formatting to make it scannable:
+  - `<code>` for function names, module names, variables
+  - `<strong>` for key concepts or warnings
+  - `<em>` for emphasis
+  - `<ul><li>` for listing multiple points
+  - Keep it concise — the narrative is shown directly, not behind a fold
+  - Cross-reference other chapters (e.g., "builds on the struct from Chapter 1")
+  - Explain the "why", not just the "what"
 - **Files**: List file paths exactly as they appear in the GitHub diff
 
 Keep narratives proportional: a simple rename needs one sentence, a new GenServer needs a paragraph.
