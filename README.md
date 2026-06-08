@@ -6,9 +6,9 @@ A Firefox extension that lets you mark individual diff lines as reviewed while g
 
 GitHub's built-in "viewed" toggle works at the file level — too coarse for serious review work. I built this extension to solve three personal pain points:
 
-- **Impatience** — I have a tendency to skip ahead while reviewing. Explicitly marking a line as reviewed forces me to consciously read it before moving on.
 - **Review flow** — I like to follow the code as I review: when a function is called, I jump to its definition to understand the implementation. That kind of non-linear reading makes it hard to remember where I was and what I'd already covered.
 - **Interruptions** — I sometimes get interrupted mid-review. File-level tracking isn't bite-sized enough to resume confidently; line-level state lets me pick up exactly where I left off.
+- **Moving targets** — authors push fixes and force-pushes while I'm still reviewing. GitHub's file-level "viewed" gets wiped by the update; here, lines that only shifted position stay marked, so I'm not dropped back to zero on files I'd already cleared.
 
 ## Features
 
@@ -35,8 +35,17 @@ All keyboard shortcuts can be customized from `about:addons` → GitHub PR Line 
 ### Persistence
 
 - Review state is saved per PR to `browser.storage.local` with a 300 ms debounce
-- Lines are identified by number + content, so state survives minor rebases via a two-pass fallback matcher
 - SPA navigation within GitHub is detected automatically — no need to reload the page
+
+### Survives PR updates
+
+When the author pushes new commits or force-pushes a rebase, your review progress isn't reset:
+
+- **Content-based tracking** — lines are remembered by their text, not just their line number, so a reviewed line that shifts position stays marked
+- **Two-pass matching** — an exact pass (line number + content), then a content-only fallback that re-anchors lines that moved
+- **Best-effort by design** — lines whose content actually changed are *not* carried over, so you re-review only what genuinely changed
+
+You resume mid-review instead of starting each file over from zero.
 
 ### Milestones
 
