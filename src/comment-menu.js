@@ -2,7 +2,9 @@ import { getThreadData } from './thread.js';
 import { buildPrompt } from './prompt.js';
 import { showToast } from './toast.js';
 
-const KEBAB_SELECTOR = 'button[data-testid="comment-header-hamburger"]';
+// React /changes kebab + classic Conversation-tab kebab
+const KEBAB_SELECTOR =
+  'button[data-testid="comment-header-hamburger"], summary.timeline-comment-action';
 
 // Octicon "copy" (16x16) — painted into the cloned item's existing icon slot
 // so size/color classes stay native.
@@ -30,10 +32,34 @@ export function initCommentMenu() {
 function onDocumentClick(e) {
   const kebab = e.target.closest?.(KEBAB_SELECTOR);
   if (kebab) {
-    pendingComment = kebab.closest('[data-marker-navigation-comment-id]');
+    pendingComment = commentForKebab(kebab);
+    // Classic <details> menus may already be populated (hover preload), in
+    // which case no mutation will follow the click — inject right away.
+    // Items still inside an unresolved <include-fragment> are the loading
+    // skeleton (GitHub ships a static "Quote reply" fallback in there): the
+    // fragment replaces its contents on load, which would take our clone
+    // with it — that lazy case is covered by the observer instead.
+    const menu = kebab.parentElement?.querySelector('details-menu[role="menu"]');
+    const loaded =
+      menu &&
+      [...menu.querySelectorAll('[role="menuitem"]')].some(
+        (item) => !item.closest('include-fragment')
+      );
+    if (pendingComment && loaded) injectMenuItem(menu);
     return;
   }
   pendingComment = null;
+}
+
+// React /changes comments carry a marker id; classic Conversation-tab
+// comments (review-thread members AND standalone issue-style comments) are
+// .timeline-comment-group blocks — thread.js decides whole-thread vs
+// single-comment extraction from the surrounding markup.
+function commentForKebab(kebab) {
+  return (
+    kebab.closest('[data-marker-navigation-comment-id]') ??
+    kebab.closest('.timeline-comment-group')
+  );
 }
 
 function onMenuMutation(mutations) {
@@ -41,7 +67,10 @@ function onMenuMutation(mutations) {
   for (const m of mutations) {
     for (const node of m.addedNodes) {
       if (node.nodeType !== 1) continue;
-      const menu = node.matches?.('[role="menu"]') ? node : node.querySelector?.('[role="menu"]');
+      // closest() covers the node being a menu, being inside one (items
+      // landing in a lazy classic details-menu), or containing one (React
+      // portal mount).
+      const menu = node.closest?.('[role="menu"]') ?? node.querySelector?.('[role="menu"]');
       if (menu) injectMenuItem(menu);
     }
   }
@@ -51,7 +80,12 @@ function onMenuMutation(mutations) {
 // visually native even when class names rotate. cloneNode copies neither
 // event listeners nor React fiber expandos, so the clone is inert.
 function injectMenuItem(menu) {
-  if (menu.querySelector('[data-copy-thread-injected]')) return;
+  if (menu.querySelector('[data-copy-thread-injected]')) {
+    // Already served — also drop the pending comment so a slow-loading other
+    // menu (classic include-fragment) can't pick up a stale binding later.
+    pendingComment = null;
+    return;
+  }
   // Prefer "Copy markdown" as both the clone source and the insertion anchor
   // so our item sits right under it and inherits the closest styling.
   const menuItems = Array.from(menu.querySelectorAll('[role="menuitem"]'));
