@@ -19,6 +19,12 @@ navigations using `browser.storage.local`.
 | `src/events.js`     | Click/hover binding: `bindLineNumberClicks`                                   |
 | `src/keyboard.js`   | Key handlers + mark/navigate functions: `onKeyDown`, `onMessage`              |
 | `src/spa.js`        | SPA navigation using Navigation API, diff/URL observers                       |
+| `src/comment-menu.js` | Injects 'Copy thread as prompt' into comment kebab menus                    |
+| `src/thread.js`     | Assemble ThreadData (meta, file, lines, comments, diff) from a comment        |
+| `src/pr-meta.js`    | PR metadata (repo, number, branches) from embedded JSON, cached               |
+| `src/diff-hunk.js`  | Serialize the diff window around commented lines                              |
+| `src/markdown.js`   | Rendered comment HTML → lightweight markdown                                  |
+| `src/prompt.js`     | Fixed "Copy thread as prompt" template renderer                               |
 | `src/main.js`       | Entry point: `initForCurrentPR` + global listener setup                       |
 | `background.js`     | Forwards keyboard commands (`Alt+R`, etc.) to content script                  |
 | `styles.css`        | Visual styles: `.pr-line-reviewed`, `.pr-reviewer-progress`, `.pr-line-flash` |
@@ -63,6 +69,11 @@ See an example in `github_diff.html`
 | `bindLineNumberClicks`                | `src/events.js` | Attach click + hover listeners; idempotent via `data-reviewerBound`   |
 | `initForCurrentPR`                    | `src/main.js`   | Bootstrap on load                                                     |
 | `onURLChange`                         | `src/spa.js`    | Handle GitHub SPA navigation (turbo:load / title mutation / popstate) |
+| `initCommentMenu`                     | `src/comment-menu.js` | Arm kebab-menu injection once per page session                  |
+| `getThreadData`                       | `src/thread.js` | Comment element → ThreadData                                          |
+| `buildPrompt`                         | `src/prompt.js` | ThreadData → clipboard prompt string                                  |
+| `extractHunk`                         | `src/diff-hunk.js` | Diff window: 3 context lines above → end of range                  |
+| `getPRMeta` / `clearPRMetaCache`      | `src/pr-meta.js` | Cached repo/branches/PR-number lookup                                |
 
 ## Important conventions
 
@@ -77,6 +88,7 @@ See an example in `github_diff.html`
 - **`github_diff.html`** can be opened locally in Firefox to test DOM interactions without a live GitHub page.
 - **Build step required** — edit files in `src/`, then run `npm run build` to regenerate `content-script.js`. Use `npm run watch` for auto-rebuild on save. Never edit `content-script.js` directly.
 - **To reload the extension** after changes: `about:debugging` → This Firefox → Reload the extension.
+- **Tests** — `npm test` runs `node --test "tests/**/*.test.js"` (jsdom against `pr-with-comments.html`). Node is mise-managed; use `mise exec -- npm test` if npm is off PATH.
 
 ## Storage format (current target: content-based)
 

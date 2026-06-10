@@ -4,6 +4,7 @@ import { buildStorageKey, loadState } from './storage.js';
 import { bindLineNumberClicks } from './events.js';
 import { applyStateToDOM } from './visual.js';
 import { updateAllFileProgress } from './progress.js';
+import { clearPRMetaCache } from './pr-meta.js';
 
 let debounceTimer = null;
 function debounce(fn, delay) {
@@ -34,6 +35,7 @@ export async function onURLChange() {
   const currentURL = location.href;
   if (currentURL === state.lastURL) return;
   state.lastURL = currentURL;
+  clearPRMetaCache();
 
   // Disconnect existing diff observer
   if (state.diffObserver) {

@@ -7,6 +7,8 @@ import { updateAllFileProgress } from './progress.js';
 import { onKeyDown, onMessage } from './keyboard.js';
 import { startDiffObserver, startURLObserver } from './spa.js';
 import { initMilestones } from './toast.js';
+import { initCommentMenu } from './comment-menu.js';
+import { clearPRMetaCache } from './pr-meta.js';
 
 async function initForCurrentPR() {
   const pr = parsePRFromURL(location.href);
@@ -17,6 +19,7 @@ async function initForCurrentPR() {
 
   console.log('[PR Reviewer] Parsed PR:', pr);
   state.storageKey = buildStorageKey(pr.owner, pr.repo, pr.prNumber);
+  clearPRMetaCache();
   state.reviewState = await loadState(state.storageKey);
 
   // Compute global total across all PRs for milestone tracking
@@ -38,6 +41,7 @@ async function initForCurrentPR() {
   }
 
   bindLineNumberClicks();
+  initCommentMenu();
   applyStateToDOM();
   updateAllFileProgress();
   startDiffObserver();
