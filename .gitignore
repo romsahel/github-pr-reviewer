@@ -3,3 +3,4 @@ content-script.js
 *.xpi
 gh-pr-reviewer-sources.zip
 .DS_Store
+pr-with-comments_files/

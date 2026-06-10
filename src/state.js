@@ -8,4 +8,5 @@ export const state = {
   lastURL: location.href,
   totalLinesEver: 0,
   shownMilestones: new Set(),
+  prMeta: null,
 };
