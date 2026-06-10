@@ -3,6 +3,13 @@ import { tableForFilePath } from './dom.js';
 // Rendered context lines included above the commented range.
 const CONTEXT_ABOVE = 3;
 
+// Synthesized hunk header: only the commented side's numbers are computed —
+// this is prompt context, not an applyable patch. Shared with the classic
+// (Conversation tab) mini-diff serializer in src/thread-classic.js.
+export function hunkHeader(side, firstLine, count) {
+  return side === 'L' ? `@@ -${firstLine},${count} +0,0 @@` : `@@ -0,0 +${firstLine},${count} @@`;
+}
+
 // Serialize the diff window around a commented line range: up to CONTEXT_ABOVE
 // rendered lines above startLine, through endLine. The header is synthesized
 // (left-side numbers are not computed — this is prompt context, not a patch).
@@ -40,9 +47,7 @@ export function extractHunk(filePath, side, startLine, endLine) {
 
   // Count covers the commented side's window; interleaved opposite-side
   // changes are extra.
-  const count = lastLine - firstLine + 1;
-  const header =
-    side === 'L' ? `@@ -${firstLine},${count} +0,0 @@` : `@@ -0,0 +${firstLine},${count} @@`;
+  const header = hunkHeader(side, firstLine, lastLine - firstLine + 1);
   return [header, ...lines].join('\n');
 }
 

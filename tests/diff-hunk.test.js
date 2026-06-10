@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { installFixtureGlobals } from './helpers/fixture.js';
 
 installFixtureGlobals();
-const { extractHunk } = await import('../src/diff-hunk.js');
+const { extractHunk, hunkHeader } = await import('../src/diff-hunk.js');
 
 const FILE = 'test/parrot/inbox/reporting/providers/mailgun/mailgun_inbox_email_reporter_test.exs';
 
@@ -64,4 +64,9 @@ test('L-side header puts numbers in the minus slot', () => {
 test('returns null for non-integer line numbers', () => {
   assert.equal(extractHunk(FILE, 'R', 1.5, 2), null);
   assert.equal(extractHunk(FILE, 'R', 1, NaN), null);
+});
+
+test('hunkHeader formats both sides', () => {
+  assert.equal(hunkHeader('R', 441, 6), '@@ -0,0 +441,6 @@');
+  assert.equal(hunkHeader('L', 118, 2), '@@ -118,2 +0,0 @@');
 });
