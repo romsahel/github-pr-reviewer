@@ -1,0 +1,59 @@
+{
+  "planPath": "docs/superpowers/plans/2026-06-10-copy-thread-as-prompt.md",
+  "tasks": [
+    {
+      "id": 0,
+      "subject": "Task 1: Test infrastructure + src/prompt.js",
+      "status": "completed",
+      "description": "**Goal:** Stand up node --test + jsdom testing, commit the fixture, and implement the pure prompt template module with tests.\n\n**Files:**\n- Modify: package.json (type module, test script, jsdom devDep)\n- Modify: .gitignore (ignore pr-with-comments_files/)\n- Create: src/prompt.js\n- Create: tests/helpers/fixture.js\n- Create: tests/prompt.test.js\n- Commit: pr-with-comments.html (test fixture)\n\n**Acceptance Criteria:**\n- npm test runs node test runner over tests/ and passes\n- npm run build still produces content-script.js\n- npm run version machinery still works (node -e stays CJS)\n- buildPrompt reproduces the spec template exactly\n\n**Verify:** npm test && npm run build (prefix mise exec -- if npm off PATH)\n\nFull code in plan Task 1.\n\n```json:metadata\n{\"files\": [\"package.json\", \".gitignore\", \"src/prompt.js\", \"tests/helpers/fixture.js\", \"tests/prompt.test.js\", \"pr-with-comments.html\"], \"verifyCommand\": \"npm test && npm run build\", \"acceptanceCriteria\": [\"npm test passes\", \"npm run build exits 0\", \"node -e CJS eval still works\", \"buildPrompt matches spec template exactly\"]}\n```"
+    },
+    {
+      "id": 1,
+      "subject": "Task 2: src/markdown.js — HTML → lightweight markdown",
+      "status": "completed",
+      "blockedBy": [
+        0
+      ],
+      "description": "**Goal:** Convert a rendered GitHub comment body (.markdown-body element) back to lightweight markdown (inline code, links, bold/italic, code blocks, lists, blockquotes).\n\n**Files:**\n- Create: src/markdown.js\n- Test: tests/markdown.test.js\n\n**Acceptance Criteria:**\n- code → backticks; links → [text](href); @mentions and text-equals-href links stay plain\n- strong/b → **…**, em/i → *…*, br → newline\n- pre → fenced block; ul/ol → -/1. lines; paragraphs separated by one blank line\n- whitespace in text nodes collapsed\n\n**Verify:** npm test\n\nFull code in plan Task 2.\n\n```json:metadata\n{\"files\": [\"src/markdown.js\", \"tests/markdown.test.js\"], \"verifyCommand\": \"npm test\", \"acceptanceCriteria\": [\"inline code/links/mentions handled\", \"bold italic br handled\", \"pre/lists/paragraphs handled\", \"whitespace collapsed\"]}\n```"
+    },
+    {
+      "id": 2,
+      "subject": "Task 3: src/pr-meta.js — PR metadata extraction",
+      "status": "completed",
+      "blockedBy": [
+        0
+      ],
+      "description": "**Goal:** Resolve repo/owner/PR number/URL and source/target branches once per PR, cached on state, from the embedded JSON payload with a header-anchor fallback.\n\n**Files:**\n- Create: src/pr-meta.js\n- Modify: src/state.js (add prMeta: null)\n- Test: tests/pr-meta.test.js\n\n**Acceptance Criteria:**\n- findBranches (pure) finds headBranch/baseBranch anywhere in a nested payload\n- getPRMeta() on the fixture returns repo parrot, PR URL #16643, source roman/inb-2778-…, target staging\n- Result cached on state.prMeta; clearPRMetaCache() resets\n\n**Verify:** npm test\n\nFull code in plan Task 3. Tests must installFixtureGlobals() BEFORE dynamic-importing src modules (state.js reads location.href at import).\n\n```json:metadata\n{\"files\": [\"src/pr-meta.js\", \"src/state.js\", \"tests/pr-meta.test.js\"], \"verifyCommand\": \"npm test\", \"acceptanceCriteria\": [\"findBranches finds nested branches\", \"getPRMeta reads fixture correctly\", \"cache + clear works\"]}\n```"
+    },
+    {
+      "id": 3,
+      "subject": "Task 4: src/diff-hunk.js — diff window extraction",
+      "status": "completed",
+      "blockedBy": [
+        0
+      ],
+      "description": "**Goal:** Serialize the diff window around a commented line range — up to 3 rendered context lines above the start line through the end line — with a synthesized @@ header.\n\n**Files:**\n- Create: src/diff-hunk.js\n- Test: tests/diff-hunk.test.js\n\n**Acceptance Criteria:**\n- extractHunk(file, 'R', 444, 446) on fixture → window starting '@@ -0,0 +441,6 @@' with 6 + lines\n- Lines keep +/-/space markers and exact text (textContent — code split across syntax spans)\n- null when file table or commented rows absent\n- No line rendered twice for context rows with two number cells\n\n**Verify:** npm test\n\nFull code in plan Task 4. Fixture is ground truth — if exact counts fail, fix implementation, not window semantics.\n\n```json:metadata\n{\"files\": [\"src/diff-hunk.js\", \"tests/diff-hunk.test.js\"], \"verifyCommand\": \"npm test\", \"acceptanceCriteria\": [\"fixture window @@ -0,0 +441,6 @@ with 6 + lines\", \"markers and text preserved\", \"null on missing table/rows\", \"no duplicate lines\"]}\n```"
+    },
+    {
+      "id": 4,
+      "subject": "Task 5: src/thread.js — thread assembly",
+      "status": "completed",
+      "blockedBy": [
+        1,
+        2,
+        3
+      ],
+      "description": "**Goal:** Given any comment element in a thread, assemble the full ThreadData object (meta + file + line ref + ordered comments + diff window), with a pure parseLineRef helper.\n\n**Files:**\n- Create: src/thread.js\n- Test: tests/thread.test.js\n\n**Acceptance Criteria:**\n- parseLineRef handles 'Comment on line R52', 'Comment on lines R444 to R446', L-side, null otherwise\n- getThreadData on fixture R444–446 thread → file, side R, 444–446, authors [gaydamakha, roamdam], bodies with inline code, branches, diff starting '@@ -0,0 +441,6 @@'\n- Reply composer (data-marker-navigation-thread-reply) never picked up\n- End-to-end: buildPrompt(getThreadData(el)) produces the full spec template from the fixture\n\n**Verify:** npm test\n\nFull code in plan Task 5.\n\n```json:metadata\n{\"files\": [\"src/thread.js\", \"tests/thread.test.js\"], \"verifyCommand\": \"npm test\", \"acceptanceCriteria\": [\"parseLineRef all cases\", \"fixture thread fully assembled\", \"reply composer excluded\", \"end-to-end prompt renders\"]}\n```"
+    },
+    {
+      "id": 5,
+      "subject": "Task 6: src/comment-menu.js — injection + wiring + manifest",
+      "status": "completed",
+      "blockedBy": [
+        4
+      ],
+      "description": "**Goal:** Inject 'Copy thread as prompt' into the kebab dropdown, wire everything into the extension, and verify on a real PR.\n\n**Files:**\n- Create: src/comment-menu.js\n- Modify: src/main.js (clearPRMetaCache() + initCommentMenu() in initForCurrentPR)\n- Modify: src/spa.js (clearPRMetaCache() in onURLChange)\n- Modify: manifest.json (add clipboardWrite permission)\n- Modify: CLAUDE.md (file map + key functions rows)\n\n**Acceptance Criteria:**\n- Kebab on real PR /changes shows 'Copy thread as prompt' styled like native items\n- Click sets clipboard to full template + success toast\n- Item appears exactly once per menu open\n- Existing line-review behavior unchanged\n- All failure paths toast instead of throwing into GitHub's React tree\n\n**Verify:** npm test && npm run build, then manual steps in plan Task 6 Step 5 (reload extension, real PR kebab → item → clipboard matches template, reply kebab, regression checks)\n\nFull code in plan Task 6.\n\n```json:metadata\n{\"files\": [\"src/comment-menu.js\", \"src/main.js\", \"src/spa.js\", \"manifest.json\", \"CLAUDE.md\", \"content-script.js\"], \"verifyCommand\": \"npm test && npm run build\", \"acceptanceCriteria\": [\"item appears in kebab menu on real PR\", \"clipboard set + toast\", \"no double injection\", \"line-review regression clean\", \"failures toast, never throw\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-06-10T17:30:00Z"
+}
