@@ -1,0 +1,30 @@
+{
+  "planPath": "docs/superpowers/plans/2026-06-10-copy-thread-conversation-tab.md",
+  "tasks": [
+    {
+      "id": 0,
+      "subject": "Task 1: Fixture + shared helpers (refactor, no behavior change)",
+      "status": "completed",
+      "description": "**Goal:** Commit the conversation-tab fixture, parameterize the fixture helper, and extract the shared hunkHeader and extractComment/collectComments helpers the classic extractor will reuse.\n\n**Files:**\n- Modify: .gitignore (ignore pr-conversation-with-comments_files/)\n- Commit: pr-conversation-with-comments.html (untracked fixture, do NOT modify)\n- Delete: probe-conv.mjs\n- Modify: tests/helpers/fixture.js (named fixtures: 'changes' default, 'conversation')\n- Modify: src/diff-hunk.js (extract + export hunkHeader(side, firstLine, count))\n- Modify: src/thread.js (extract + export extractComment + collectComments)\n- Modify: tests/diff-hunk.test.js (hunkHeader unit test)\n\n**Acceptance Criteria:**\n- 37/37 tests pass\n- installFixtureGlobals() unchanged; installFixtureGlobals('conversation') loads new fixture (URL .../outlook-addin-phishing-reporter/pull/268)\n- extractHunk output unchanged; hunkHeader('R',441,6)='@@ -0,0 +441,6 @@', hunkHeader('L',118,2)='@@ -118,2 +0,0 @@'\n- React path through collectComments (built on extractComment)\n\n**Verify:** npm test → 37/37\n\nFull code in plan Task 1.\n\n```json:metadata\n{\"files\": [\".gitignore\", \"pr-conversation-with-comments.html\", \"tests/helpers/fixture.js\", \"src/diff-hunk.js\", \"src/thread.js\", \"tests/diff-hunk.test.js\"], \"verifyCommand\": \"npm test\", \"acceptanceCriteria\": [\"37/37 tests pass\", \"fixture helper backwards compatible + conversation fixture\", \"hunkHeader extracted, extractHunk unchanged\", \"React path through collectComments\"]}\n```"
+    },
+    {
+      "id": 1,
+      "subject": "Task 2: thread-classic.js + dispatch in thread.js",
+      "status": "completed",
+      "blockedBy": [
+        0
+      ],
+      "description": "**Goal:** Extract ThreadData from classic Conversation-tab review threads AND standalone issue-style comments, routing getThreadData between the three worlds.\n\n**Files:**\n- Create: src/thread-classic.js (getClassicThreadData, getClassicCommentData, serializeMiniDiff)\n- Modify: src/thread.js (three-way dispatch; React body → private getReactThreadData)\n- Test: tests/thread-classic.test.js\n\n**Acceptance Criteria:**\n- 'outlook_version' comment → repo outlook-addin-phishing-reporter, branches roman/legacy-beacon-metadata→staging, file index.html, side R, startLine=endLine=last mini-diff row, 3 comments (cubic-dev-ai, romsahel, cubic-dev-ai), diff header from first row, all + lines\n- standalone 'monitoring functions' comment → exactly ONE comment, file/side/lines/diff null\n- buildPrompt renders Line N + diff fence for thread; NO File/Lines/Diff for standalone\n- React path regression green\n\n**Verify:** npm test → 41/41\n\nFull code in plan Task 2. Probe fixture FIRST to pin literals (expected lines 137-140); circular thread.js ⇄ thread-classic.js import is function-declaration-only — safe.\n\n```json:metadata\n{\"files\": [\"src/thread-classic.js\", \"src/thread.js\", \"tests/thread-classic.test.js\"], \"verifyCommand\": \"npm test\", \"acceptanceCriteria\": [\"classic thread fully assembled\", \"standalone yields single-comment data with nulls\", \"buildPrompt renders both shapes\", \"React regression green\"]}\n```"
+    },
+    {
+      "id": 2,
+      "subject": "Task 3: Conversation-tab kebab injection in comment-menu.js",
+      "status": "completed",
+      "blockedBy": [
+        1
+      ],
+      "description": "**Goal:** Detect classic kebabs (review-thread comments AND standalone issue-style comments), handle lazy and preloaded details-menu population, and exercise the full copy pipeline in tests.\n\n**Files:**\n- Modify: src/comment-menu.js\n- Test: tests/comment-menu-classic.test.js\n- Modify: CLAUDE.md\n\n**Acceptance Criteria:**\n- classic kebab clicks record .timeline-comment-group for thread + standalone comments\n- lazy include-fragment items trigger injection; preloaded menus injected synchronously on click\n- thread item copies whole thread (file index.html, diff fence); standalone copies just that comment (no File/Lines/Diff)\n- React-path tests green; npm run build exit 0; single injection pipeline\n\n**Verify:** npm test && npm run build → 44/44, build exit 0\n\nFull code in plan Task 3: KEBAB_SELECTOR + summary.timeline-comment-action; commentForKebab (marker-id ?? .timeline-comment-group) + immediate injection when sibling details-menu already populated; onMenuMutation via node.closest('[role=menu]') ?? node.querySelector. CLAUDE.md rows. Manual Firefox verification is the user's final step.\n\n```json:metadata\n{\"files\": [\"src/comment-menu.js\", \"tests/comment-menu-classic.test.js\", \"CLAUDE.md\"], \"verifyCommand\": \"npm test && npm run build\", \"acceptanceCriteria\": [\"classic kebabs recorded for both comment kinds\", \"lazy + preloaded menu injection\", \"thread vs standalone copy shapes correct\", \"regression + build green\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-06-11T02:30:00Z"
+}
