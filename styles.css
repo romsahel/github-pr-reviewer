@@ -108,14 +108,20 @@ html[data-color-mode="light"] {
 }
 
 /* ── Reviewed row ────────────────────────────────────────────────────────── */
-/* Soft blue avoids confusion with GitHub's green addition rows */
-tr.pr-line-reviewed td {
+/* Soft blue avoids confusion with GitHub's green addition rows.
+   .pr-line-reviewed = every side of the row reviewed (colors the whole row);
+   .pr-side-reviewed = one side's cells, so a split-view row can be half reviewed.
+   Split view's filler cells (.empty-diff-line) opposite a one-sided line stay uncolored. */
+tr.pr-line-reviewed td:where(:not(.empty-diff-line)),
+tr td.pr-side-reviewed {
   background-color: var(--pr-reviewed-bg) !important;
 }
 
 /* Reviewed deleted lines get a distinct tint so they aren't mistaken for reviewed
-   additions. Split-view rows carrying both sides keep the default color. */
-tr.pr-line-reviewed:has(.diff-text.deletion, td.blob-code-deletion):not(:has(.diff-text.addition, td.blob-code-addition)) td {
+   additions: the whole row when it holds only a deletion, otherwise just the
+   deletion side's cells. :where() keeps specificity low so the hover rule wins. */
+tr.pr-line-reviewed:where(:has(.diff-text.deletion, td.blob-code-deletion):not(:has(.diff-text.addition, td.blob-code-addition))) td:where(:not(.empty-diff-line)),
+tr td.pr-side-reviewed:where(.blob-code-deletion, :has(.diff-text.deletion), :has(+ td .diff-text.deletion), :has(+ td.blob-code-deletion)) {
   background-color: var(--pr-reviewed-deleted-bg) !important;
 }
 

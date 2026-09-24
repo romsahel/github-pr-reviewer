@@ -28,7 +28,7 @@ navigations using `browser.storage.local`.
 | `src/prompt.js`     | Fixed "Copy thread as prompt" template renderer                               |
 | `src/main.js`       | Entry point: `initForCurrentPR` + global listener setup                       |
 | `background.js`     | Forwards keyboard commands (`Alt+R`, etc.) to content script                  |
-| `styles.css`        | Visual styles: `.pr-line-reviewed`, `.pr-reviewer-progress`, `.pr-line-flash` |
+| `styles.css`        | Visual styles: `.pr-line-reviewed`, `.pr-side-reviewed`, `.pr-reviewer-progress`, `.pr-line-flash` |
 | `options.html/js`   | Stats page: view/export/clear all stored review data                          |
 | `manifest.json`     | MV2, Firefox only (`gecko` min 126), matches `*/pull/*` (Conversation + /changes) |
 | `github_diff.html`  | Local GitHub diff fixture for manual testing without a live PR                |
@@ -82,7 +82,8 @@ See an example in `github_diff.html`
 - **Use `browser.*` API only** — this is a Firefox extension, not Chrome. Never use `chrome.*` or DOM `localStorage`.
 - **GitHub uses Navigation API** — Detect SPA navigation via `window.navigation` events, not Turbo events. Fallbacks: title mutations and popstate.
 - **`waitForDiffContent` is critical** — GitHub loads diffs progressively/lazily after page load. Always wait for diff tables to appear before binding events.
-- **`applyStateToDOM` is additive** — it only adds `.pr-line-reviewed`, never removes.
+- **Reviewed state is per side** — `setLineVisualState(td, …)` (`src/visual.js`) puts `.pr-side-reviewed` on that side's line-number + code cells. The row gets `.pr-line-reviewed` only when every markable side in it is reviewed, so a split-view row pairing a deletion with an addition can be half reviewed. Progress counts `.pr-side-reviewed` cells.
+- **`applyStateToDOM` is additive** — it only adds reviewed classes, never removes.
   A full reset happens on page navigation.
 - **`navigateToUnreviewed` is DOM-based** — it queries `.diff-line-row:not(.pr-line-reviewed)`.
   No need to touch stored state when modifying navigation.
