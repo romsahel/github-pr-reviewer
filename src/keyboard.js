@@ -26,7 +26,7 @@ function markCurrentLine() {
   const prev = state.totalLinesEver;
   sides[side].add(lineKey);
   state.totalLinesEver++;
-  setLineVisualState(tr, true);
+  setLineVisualState(td, true);
   updateFileProgress(filePath);
   scheduleSave();
   checkMilestone(prev);
@@ -65,6 +65,7 @@ function markAllInFileUntilHere() {
     const tds = tr.querySelectorAll('td.new-diff-line-number[data-line-number]:not(.diff-line-number-neutral)');
     if (tds.length === 0) continue; // context-only row, skip
     for (const td of tds) {
+      if (isEmptyLine(td)) continue;
       const lineKey = getLineKey(td);
       if (lineKey === null) continue;
       const side = getSideChar(td);
@@ -73,8 +74,8 @@ function markAllInFileUntilHere() {
         sides[side].add(lineKey);
         newCount++;
       }
+      setLineVisualState(td, true);
     }
-    setLineVisualState(tr, true);
   }
 
   if (newCount > 0) {

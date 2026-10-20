@@ -14,8 +14,7 @@ export function updateFileProgress(filePath) {
     if (seen.has(key)) continue;
     seen.add(key);
     totalLines++;
-    const tr = td.closest('tr');
-    if (tr && tr.classList.contains('pr-line-reviewed')) reviewedCount++;
+    if (td.classList.contains('pr-side-reviewed')) reviewedCount++;
   }
 
   // Find or create the progress badge in the file header
