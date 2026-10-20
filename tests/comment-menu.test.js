@@ -80,7 +80,7 @@ test('injects a labeled, aria-sane item once and copies the thread prompt', asyn
   item.dispatchEvent(new window.Event('click', { bubbles: true }));
   await tick();
   assert.ok(copied, 'clipboard.writeText not called');
-  assert.ok(copied.startsWith('Address the following comment:\n'));
+  assert.ok(copied.startsWith('Check if the issue raised in the review thread below is valid'));
   assert.ok(copied.includes('> **gaydamakha:**'));
 
   // double-click safety: a second activation re-copies the SAME thread (no false error)

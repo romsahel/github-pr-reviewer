@@ -42,9 +42,8 @@ test('getThreadData assembles the fixture R444-446 thread', () => {
 test('end-to-end: buildPrompt renders the fixture thread', () => {
   clearPRMetaCache();
   const out = buildPrompt(getThreadData(findFixtureComment()));
-  assert.ok(out.startsWith('Address the following comment:\n'));
-  assert.ok(out.includes('**Repository:** `parrot`\n'));
-  assert.ok(out.includes('**Lines 444-446**\n'));
+  assert.ok(out.startsWith('Check if the issue raised in the review thread below is valid'));
+  assert.ok(out.includes(', lines 444-446:\n'));
   assert.ok(out.includes('> **gaydamakha:**\n'));
   assert.ok(out.includes('```diff\n@@ -0,0 +441,6 @@\n'));
 });

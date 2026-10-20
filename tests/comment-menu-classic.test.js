@@ -43,8 +43,8 @@ test('lazy details-menu gets the item when items load, and copies the classic th
   items[0].dispatchEvent(new window.Event('click', { bubbles: true }));
   await tick();
   assert.ok(copied, 'clipboard not written');
-  assert.ok(copied.startsWith('Address the following comment:\n'));
-  assert.ok(copied.includes('**File:** `index.html`'));
+  assert.ok(copied.startsWith('Check if the issue raised in the review thread below is valid'));
+  assert.ok(copied.includes('At index.html, line 140:'));
   assert.ok(copied.includes('```diff'));
 });
 

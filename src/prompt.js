@@ -1,26 +1,27 @@
 // Render the fixed "Copy thread as prompt" template from a ThreadData object:
 // { repo, prUrl, sourceBranch, targetBranch, file, side, startLine, endLine,
 //   comments: [{ author, bodyMarkdown }], diff }
-// Optional pieces (branches, file, lines, diff) are omitted when null —
+// Optional pieces (branch, file, lines, diff) are omitted when null —
 // never rendered as empty values.
+const INSTRUCTION =
+  'Check if the issue raised in the review thread below is valid — if so, understand the root cause and fix it. ' +
+  "If it isn't valid or won't be fixed in this PR, draft a reply with the reason and stop; " +
+  "I'll post it and resolve the thread.";
+
 export function buildPrompt(t) {
-  const lines = ['Address the following comment:'];
-  lines.push(`**Repository:** \`${t.repo}\``);
-  if (t.sourceBranch) {
-    lines.push(`**Source branch:** \`${t.sourceBranch}\``);
-    lines.push(`Use \`${t.sourceBranch}\` as the working branch when possible.`);
+  const lines = [INSTRUCTION, ''];
+  if (t.file) {
+    let where = `At ${t.file}`;
+    if (t.startLine != null) {
+      where +=
+        t.endLine != null && t.endLine !== t.startLine
+          ? `, lines ${t.startLine}-${t.endLine}`
+          : `, line ${t.startLine}`;
+    }
+    lines.push(`${where}:`);
   }
-  if (t.targetBranch) lines.push(`**Target branch:** \`${t.targetBranch}\``);
-  lines.push(`**Pull request:** ${t.prUrl}`);
-  if (t.file) lines.push(`**File:** \`${t.file}\``);
-  if (t.startLine != null) {
-    lines.push(
-      t.endLine != null && t.endLine !== t.startLine
-        ? `**Lines ${t.startLine}-${t.endLine}**`
-        : `**Line ${t.startLine}**`
-    );
-  }
-  lines.push('', '**Comment thread:**', '');
+  if (t.diff) lines.push('```diff', t.diff, '```');
+  if (t.file || t.diff) lines.push('');
   for (const c of t.comments) {
     lines.push(`> **${c.author}:**`);
     for (const bodyLine of c.bodyMarkdown.split('\n')) {
@@ -28,6 +29,7 @@ export function buildPrompt(t) {
     }
     lines.push('>');
   }
-  if (t.diff) lines.push('', '**Diff:**', '', '```diff', t.diff, '```');
+  lines.push('', `PR: ${t.prUrl}`);
+  if (t.sourceBranch) lines.push(`Branch: ${t.sourceBranch}`);
   return lines.join('\n') + '\n';
 }

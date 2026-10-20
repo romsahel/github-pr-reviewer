@@ -51,9 +51,7 @@ test('standalone conversation comments yield just that comment', () => {
 test('end-to-end: buildPrompt renders the classic thread', () => {
   clearPRMetaCache();
   const out = buildPrompt(getThreadData(commentIn('is mislabeled on Outlook')));
-  assert.ok(out.includes('**Repository:** `outlook-addin-phishing-reporter`\n'));
-  assert.ok(out.includes('**File:** `index.html`\n'));
-  assert.ok(out.includes('**Line 140**\n'));
+  assert.ok(out.includes('At index.html, line 140:\n'));
   assert.ok(out.includes('> **romsahel:**\n'));
   assert.ok(out.includes('```diff\n@@ -0,0 +137,4 @@\n'));
 });
@@ -61,12 +59,11 @@ test('end-to-end: buildPrompt renders the classic thread', () => {
 test('end-to-end: standalone comment prompt has no File/Lines/Diff sections', () => {
   clearPRMetaCache();
   const out = buildPrompt(getThreadData(commentIn('monitoring functions outside')));
-  assert.ok(out.startsWith('Address the following comment:\n'));
-  assert.ok(out.includes('**Pull request:** https://github.com/tryriot/outlook-addin-phishing-reporter/pull/268\n'));
+  assert.ok(out.startsWith('Check if the issue raised in the review thread below is valid'));
+  assert.ok(out.includes('PR: https://github.com/tryriot/outlook-addin-phishing-reporter/pull/268\n'));
   assert.ok(out.includes('monitoring functions'));
-  assert.ok(!out.includes('**File:**'));
-  assert.ok(!out.includes('**Line'));
-  assert.ok(!out.includes('**Diff:**'));
+  assert.ok(!out.includes('\nAt '));
+  assert.ok(!out.includes('```diff'));
 });
 
 test('mixed deletion/addition mini-diff anchors the header on the last row side', async () => {
