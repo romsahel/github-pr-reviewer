@@ -21,7 +21,8 @@ const thread = {
 test('buildPrompt renders the full template', () => {
   const out = buildPrompt(thread);
   assert.ok(out.startsWith('Check if the issue raised in the review thread below is valid'));
-  assert.ok(out.includes("draft a reply with the reason and stop; I'll post it and resolve the thread.\n"));
+  assert.ok(out.includes("Either way, draft a short reply for me to post, then stop; I'll post it and resolve the thread.\n- Fixed: thank the reviewer"));
+  assert.ok(out.includes("\n- Not fixed: give the reason it isn't valid or won't be fixed in this PR.\n\nAt "));
   assert.ok(out.includes('\nAt test/parrot/inbox/reporting/providers/mailgun/mailgun_inbox_email_reporter_test.exs, lines 444-446:\n```diff\n@@ -0,0 +441,6 @@\n+      workspace: workspace,'));
   assert.ok(out.includes('> **gaydamakha:**\n> Nit: You could import'));
   assert.ok(out.includes('> **roamdam:**\n> Confirmed,'));
